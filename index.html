@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="旅行攻略 · 每一程都值得被记录 —— 温州雁荡山行程书">
+<title>旅行攻略 · Travel Notes</title>
+
+<!-- 印章风格 favicon（内联 SVG，无需外部文件） -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='%23b23a24'/%3E%3Ctext x='32' y='42' font-family='serif' font-size='36' fill='%23fbf8f0' text-anchor='middle'%3E%E6%97%85%3C/text%3E%3C/svg%3E">
+
+<!-- 字体：Noto Serif SC（标题衬线）+ Noto Sans SC（正文） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================
+   1. 设计变量（改这里即可整体换肤）
+   ========================================================== */
+:root {
+  /* 纸张与墨色 */
+  --paper:        #f0eadb;   /* 页面底色（米白纸） */
+  --paper-2:      #e8e0cd;   /* 纸面深一档 */
+  --card:         #fbf8f0;   /* 卡片纸色 */
+  --ink:          #2a2620;   /* 墨色文字 */
+  --ink-soft:     #7a7261;   /* 次级文字 */
+  --ink-faint:    #a89f8c;   /* 弱化文字 */
+  --line:         rgba(42,38,32,0.14);
+  /* 印章红（点缀色） */
+  --seal:         #b23a24;
+  --seal-deep:    #92291a;
+  --seal-soft:    rgba(178,58,36,0.09);
+  /* 辅助色 */
+  --green:        #46573f;
+  --gold:         #b98a3e;
+
+  /* 圆角与阴影 */
+  --radius-lg:    26px;
+  --radius-pill:  999px;
+  --shadow-card:  0 24px 60px -28px rgba(42,38,32,0.38);
+  --shadow-lift:  0 36px 72px -28px rgba(42,38,32,0.5);
+
+  /* 纸纹颗粒（内联 SVG 噪点，烘焙进页面背景，不做全屏叠加层） */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+
+  /* 动效 */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================
+   2. 基础样式 + 纸张颗粒质感
+   ========================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;           /* 页面切换由 .page 自己管理滚动 */
+}
+
+::selection { background: rgba(178,58,36,0.18); }
+
+/* ==========================================================
+   3. 舞台与两页（主页面 / 内容页）
+   ========================================================== */
+.stage {
+  position: fixed; inset: 0;
+}
+
+.page {
+  position: absolute; inset: 0;
+  background: var(--noise), var(--paper);
+  background-size: 200px 200px, auto;
+}
+
+.page-index  { overflow-y: auto; }
+.page-viewer {
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;                 /* 覆盖在主页面之上 */
+}
+.page-viewer.is-visible { visibility: visible; }
+
+/* 页面显隐辅助类 */
+.page.is-hidden { visibility: hidden; pointer-events: none; }
+
+/* ==========================================================
+   4. 主页面 · 头部（刊头）
+   ========================================================== */
+.masthead {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 70px clamp(20px, 6vw, 88px) 44px;
+  z-index: 1;
+}
+
+/* 山峦剪影背景（纯装饰） */
+.hills {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 46vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.brand { display: flex; align-items: center; gap: 22px; }
+
+/* 印章 */
+.seal {
+  flex: 0 0 auto;
+  width: 62px; height: 62px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--seal);
+  color: #fbf8f0;
+  font-family: "Noto Serif SC", serif;
+  font-weight: 700; font-size: 32px;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.22);
+  transform: rotate(-3deg);
+  transition: transform 0.45s var(--ease-out-expo);
+}
+.masthead:hover .seal { transform: rotate(-3deg) scale(1.04); }
+
+.site-title {
+  font-family: "Noto Serif SC", serif;
+  font-weight: 900;
+  font-size: clamp(42px, 6vw, 70px);
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+.site-sub {
+  margin-top: 12px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  letter-spacing: 0.4em;
+}
+
+.masthead-date {
+  margin-top: 34px;
+  color: var(--ink-faint);
+  font-size: 14px;
+  letter-spacing: 0.28em;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.masthead-date::before {
+  content: "";
+  width: 46px; height: 1px;
+  background: var(--line);
+}
+
+/* ==========================================================
+   5. 主页面 · 攻略目录区
+   ========================================================== */
+.guides {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px clamp(20px, 6vw, 88px) 70px;
+}
+
+.index-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-top: 2px solid var(--ink);
+  padding-top: 18px;
+}
+.section-title { font-family: "Noto Serif SC", serif; font-weight: 700; font-size: clamp(26px, 4vw, 36px); }
+.section-en   { letter-spacing: 0.42em; color: var(--ink-faint); font-size: 11px; }
+.section-count { margin-left: auto; color: var(--ink-faint); font-size: 13px; letter-spacing: 0.12em; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+  margin-top: 34px;
+  perspective: 1200px;
+}
+
+/* ---- 卡片（攻略入口） ---- */
+.guide-card {
+  position: relative;
+  display: flex; flex-direction: column;
+  min-height: 320px;
+  padding: 30px;
+  text-align: left;
+  font: inherit; color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  overflow: hidden;               /* 裁掉右上角折角 */
+  transition: box-shadow 0.5s var(--ease-out-expo);
+  will-change: transform;
+  appearance: none;
+}
+.guide-card:hover  { box-shadow: var(--shadow-lift); }
+.guide-card:hover .card-arrow { transform: translateX(7px); }
+.guide-card:hover .card-title { color: var(--seal-deep); }
+.guide-card:focus-visible { outline: 2px solid var(--seal); outline-offset: 3px; }
+
+/* 右上角"折纸角" */
+.card-fold {
+  position: absolute; top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 42px 42px 0;
+  border-color: transparent rgba(42,38,32,0.10) transparent transparent;
+  border-top-right-radius: var(--radius-lg);
+  pointer-events: none;
+}
+
+.card-num { font-family: "Noto Serif SC", serif; font-size: 15px; color: var(--ink-faint); letter-spacing: 0.2em; }
+.card-body { margin-top: auto; }
+.card-tag {
+  display: inline-block;
+  font-size: 12px; letter-spacing: 0.18em;
+  color: var(--seal);
+  background: var(--seal-soft);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+}
+.card-title {
+  display: block;
+  margin-top: 18px;
+  font-family: "Noto Serif SC", serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.3;
+  transition: color 0.35s;
+}
+.card-sub {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 300;
+}
+.card-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px; letter-spacing: 0.16em;
+  color: var(--ink-soft);
+}
+.card-arrow { font-size: 18px; color: var(--seal); transition: transform 0.4s var(--ease-out-expo); }
+
+/* 搜索框 */
+.search-wrap { position: relative; margin-top: 26px; max-width: 440px; }
+.search-icon {
+  position: absolute; left: 18px; top: 50%;
+  width: 18px; height: 18px;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  font: inherit; font-size: 15px; letter-spacing: 0.05em;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 13px 20px 13px 46px;
+  box-shadow: var(--shadow-card);
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.search-input::placeholder { color: var(--ink-faint); letter-spacing: 0.1em; }
+.search-input:focus { border-color: var(--seal); box-shadow: 0 0 0 4px var(--seal-soft); }
+
+/* 搜索过滤后隐藏的卡片 */
+.guide-card.is-filtered { display: none; }
+
+/* 空状态提示（无攻略 / 搜索无结果） */
+.grid-empty {
+  margin-top: 28px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* 页脚 */
+.foot {
+  text-align: center;
+  padding: 30px 20px 64px;
+  color: var(--ink-faint);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+}
+
+/* ==========================================================
+   6. 内容页（查看器）
+   ========================================================== */
+.viewer-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 18px;
+  padding: 18px clamp(18px, 4vw, 44px);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.back-btn {
+  font: inherit;
+  font-size: 15px; letter-spacing: 0.1em;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.back-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); transform: translateX(-3px); }
+.back-btn:focus-visible { outline: 2px solid var(--seal); outline-offset: 3px; }
+
+.viewer-title {
+  font-family: "Noto Serif SC", serif;
+  font-weight: 700;
+  font-size: clamp(16px, 2.4vw, 22px);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 放纸面的容器：内嵌 iframe 内容 */
+.viewer-paper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: clamp(12px, 3vw, 32px);
+}
+.viewer-frame {
+  flex: 1;
+  width: 100%; height: 100%;
+  min-height: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+/* 加载指示 */
+.viewer-loading {
+  position: absolute; inset: 0; z-index: 2;
+  display: grid; place-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  color: var(--ink-soft);
+  font-size: 14px; letter-spacing: 0.15em;
+  transition: opacity 0.45s;
+}
+.viewer-loading.hide { opacity: 0; pointer-events: none; }
+.loader-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--seal);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(0.55); opacity: 0.4; }
+}
+
+/* ==========================================================
+   7. 入场动画（页面加载时的错落浮现）
+   ========================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+  transition-delay: var(--d, 0s);
+}
+.loaded .reveal { opacity: 1; transform: none; }
+
+/* ==========================================================
+   8. 移动端适配
+   ========================================================== */
+@media (max-width: 640px) {
+  .masthead { padding-top: 44px; }
+  .seal { width: 50px; height: 50px; font-size: 26px; }
+  .guide-card { min-height: 260px; }
+  .viewer-head { flex-wrap: wrap; }
+  .back-btn { padding: 8px 16px; font-size: 14px; }
+}
+
+/* ==========================================================
+   9. 减少动态（无障碍）：关闭动效，改用瞬时切换
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- ================================================
+       页一 · 主页面（攻略目录）
+       ================================================ -->
+  <section class="page page-index" id="pageIndex" aria-label="攻略目录">
+
+    <!-- 山峦剪影 -->
+    <svg class="hills" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 300V236c60-42 128-66 196-52 74 15 132 52 208 34 80-19 132-74 214-96 80-22 168-4 230 26 66 32 112 74 190 66 92-10 154-56 240-74 66-14 124 8 162 30v130Z" fill="#2a2620" opacity="0.05"/>
+      <path d="M0 300V262c70-30 150-48 226-32 80 17 140 50 222 34 82-16 140-60 224-72 80-11 152 14 206 40 66 32 130 58 210 50 88-9 152-48 242-62 58-9 110 4 110 4v72Z" fill="#2a2620" opacity="0.04"/>
+      <circle cx="1235" cy="128" r="30" fill="#b23a24" opacity="0.35"/>
+      <path d="M1300 96q-11-14-22 0M1340 84q-11-14-22 0" stroke="#2a2620" fill="none" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+    </svg>
+
+    <header class="masthead">
+      <div class="brand">
+        <span class="seal reveal" style="--d:0s">旅</span>
+        <div>
+          <h1 class="site-title reveal" style="--d:0.08s">旅行攻略</h1>
+          <p class="site-sub reveal" style="--d:0.16s">山高水长 · 步履不停</p>
+        </div>
+      </div>
+      <p class="masthead-date reveal" style="--d:0.24s">TRAVEL NOTES · 天干七</p>
+    </header>
+
+    <main class="guides">
+      <div class="index-head reveal" style="--d:0.32s">
+        <h2 class="section-title">攻略目录</h2>
+        <span class="section-en">THE GUIDES</span>
+        <span class="section-count" id="guideCount"></span>
+      </div>
+
+      <!-- 搜索：模糊匹配攻略名称 -->
+      <div class="search-wrap reveal" style="--d:0.38s">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="search" id="searchInput" class="search-input" placeholder="搜索攻略名称…" aria-label="搜索攻略">
+      </div>
+
+      <div class="card-grid" id="cardGrid"><!-- 卡片由 JS 渲染 --></div>
+      <div class="grid-empty" id="gridEmpty" hidden></div>
+    </main>
+
+    <footer class="foot">把远方的风景，装进一本书里</footer>
+  </section>
+
+  <!-- ================================================
+       页二 · 内容页（查看器，iframe 内嵌攻略）
+       ================================================ -->
+  <section class="page page-viewer" id="pageViewer" aria-label="攻略详情">
+    <div class="viewer-head">
+      <button class="back-btn" id="backBtn" type="button" aria-label="返回主页面">← 返回</button>
+      <span class="viewer-title" id="viewerTitle">旅行攻略</span>
+    </div>
+    <div class="viewer-paper">
+      <div class="viewer-loading" id="viewerLoading" aria-live="polite">
+        <span class="loader-dot"></span>
+        正在展开…
+      </div>
+      <iframe class="viewer-frame" id="viewerFrame" title="攻略内容"></iframe>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ==========================================================
+   1. 攻略配置
+   ----------------------------------------------------------
+   · 自动发现：页面运行时从 GitHub API 拉取 docs/ 目录文件列表，
+     往 docs/ 里新增 HTML 后，无需修改本文件即可自动出现卡片。
+   · 可选元数据：如需为某篇攻略补充标签 / 副标题，按文件名在此登记。
+   · 兜底列表：仅当 GitHub API 不可用（本地打开 / 私有仓库 / 断网）时使用。
+   ========================================================== */
+
+// 若以 GitHub Pages 的 /docs 目录发布，请把 index.html 放进 docs/，并将此项改为 ''
+const DOCS_PREFIX = 'docs/';
+
+// 手动指定 GitHub 仓库（可选）：当页面无法从 URL 推断仓库时使用，
+// 例如直接用 file:// 双击打开 index.html 的本地预览。留空则仅靠 URL 推断。
+const GITHUB_REPO = '846363674/Travel';
+
+// 按文件名登记可选元数据（title 留空则自动从文件名推断）
+const GUIDE_META = {
+  '温州-雁荡山.html': { title: '温州 · 雁荡山', tag: '浙江 · 山岳', subtitle: '2026-09-25 行程书 · 含地图与预算' }
+};
+
+// 静态兜底文件名列表
+const GUIDE_FALLBACK = ['温州-雁荡山.html'];
+
+/* ==========================================================
+   2. DOM 引用与状态
+   ========================================================== */
+const els = {
+  stage:      document.getElementById('stage'),
+  index:      document.getElementById('pageIndex'),
+  viewer:     document.getElementById('pageViewer'),
+  grid:       document.getElementById('cardGrid'),
+  count:      document.getElementById('guideCount'),
+  search:     document.getElementById('searchInput'),
+  empty:      document.getElementById('gridEmpty'),
+  frame:      document.getElementById('viewerFrame'),
+  loading:    document.getElementById('viewerLoading'),
+  backBtn:    document.getElementById('backBtn'),
+  title:      document.getElementById('viewerTitle')
+};
+
+let state = 'index';          // index | viewer
+let lastFocused = null;       // 记住是从哪张卡片进入的
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ==========================================================
+   3. 渲染主页面卡片（支持自动发现 + 模糊搜索）
+   ========================================================== */
+let guideList = [];      // 当前展示的攻略条目
+let guideCards = [];     // 对应的卡片 DOM
+
+// 从文件名推断标题：去掉 .html 和日期段（如 2026-10-04），
+// 其余连字符转「 · 」（"温州-雁荡山" → "温州 · 雁荡山"，"潮汕-2026-10-04-行程书" → "潮汕行程书"）
+function deriveTitle(name) {
+  let base = name.replace(/\.html?$/i, '').split('/').pop();
+  base = base.replace(/-?\d{4}[-/.]\d{1,2}[-/.]\d{1,2}-?/g, '');
+  base = base.replace(/^-+|-+$/g, '').replace(/(?<=[^\d])-(?=[^\d])/g, ' · ');
+  return base.trim() || name.replace(/\.html?$/i, '').split('/').pop();
+}
+
+// 组装攻略条目：补全标题 / 标签 / 副标题
+function makeEntry(name) {
+  const meta = GUIDE_META[name] || {};
+  return {
+    file:     DOCS_PREFIX + name,
+    title:    meta.title || deriveTitle(name),
+    tag:      meta.tag || '旅行 · 攻略',
+    subtitle: meta.subtitle || '点击展开攻略'
+  };
+}
+
+function renderGuides(entries) {
+  guideList = entries;
+  guideCards = [];
+
+  els.grid.innerHTML = entries.map((g, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    return `
+      <button class="guide-card reveal" type="button" style="--d:${0.38 + i * 0.09}s"
+              data-index="${i}" aria-label="打开攻略：${g.title}">
+        <span class="card-fold" aria-hidden="true"></span>
+        <span class="card-num">${num}</span>
+        <span class="card-body">
+          <span class="card-tag">${g.tag}</span>
+          <span class="card-title">${g.title}</span>
+          <span class="card-sub">${g.subtitle}</span>
+        </span>
+        <span class="card-cta">打开攻略 <span class="card-arrow" aria-hidden="true">→</span></span>
+      </button>`;
+  }).join('');
+
+  guideCards = Array.from(els.grid.querySelectorAll('.guide-card'));
+  bindCards();
+  applySearch();
+}
+
+/* ---- 模糊搜索：子串匹配，或查询字符按顺序出现（模糊命中） ---- */
+function fuzzyMatch(query, text) {
+  const q = query.toLowerCase().trim();
+  if (!q) return true;
+  const t = text.toLowerCase();
+  if (t.includes(q)) return true;
+  let pos = 0;
+  for (const ch of q) {
+    pos = t.indexOf(ch, pos);
+    if (pos === -1) return false;
+    pos++;
+  }
+  return true;
+}
+
+function applySearch() {
+  const q = els.search.value.trim();
+  let shown = 0;
+
+  guideCards.forEach((card, i) => {
+    const g = guideList[i];
+    if (!g) return;
+    const ok = fuzzyMatch(q, `${g.title} ${g.tag} ${g.subtitle} ${g.file}`);
+    card.classList.toggle('is-filtered', !ok);
+    if (ok) shown++;
+  });
+
+  els.count.textContent = q
+    ? `${shown} / ${guideList.length} 篇`
+    : guideList.length
+      ? `共 ${guideList.length} 篇`
+      : '共 0 篇';
+
+  els.empty.hidden = shown !== 0;
+  els.empty.textContent = q
+    ? `未找到与「${q}」匹配的攻略`
+    : '暂无攻略，敬请期待';
+}
+
+/* ==========================================================
+   4. 自动发现 docs/ 目录（GitHub API）
+   从当前页面 URL 推断 owner / repo，拉取仓库 docs/ 目录。
+   本地打开 / 私有仓库 / 断网时自动降级到静态兜底列表。
+   ========================================================== */
+const CACHE_KEY = 'travel-guides-cache-v1';
+const CACHE_TTL = 10 * 60 * 1000;   // 缓存 10 分钟，兜底用
+
+// 从 GitHub Pages 域名推断仓库：https://OWNER.github.io/REPO/...
+function repoBase() {
+  const host = location.hostname;
+  const path = location.pathname;
+  const owner = /\.github\.io$/i.test(host) ? host.replace(/\.github\.io$/i, '') : null;
+  const segs = path.split('/').filter(Boolean);
+  if (!owner || segs.length === 0) return null;
+  return { owner, repo: segs[0] };
+}
+
+function readCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (c && Array.isArray(c.list) && Date.now() - c.time < CACHE_TTL) return c.list;
+  } catch (e) {}
+  return null;
+}
+
+function writeCache(list) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), list })); } catch (e) {}
+}
+
+// 本地预览降级：解析静态服务器（如 python http.server）自动生成的目录列表页，
+// 解析 <a> 的文本即为原始文件名
+async function discoverLocally() {
+  const res = await fetch(DOCS_PREFIX, { method: 'GET', cache: 'no-store' });
+  if (!res.ok) throw new Error('no listing');
+  const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+  const names = Array.from(doc.querySelectorAll('a'))
+    .map((a) => (a.textContent || '').trim())
+    .filter((n) => n && /\.html?$/i.test(n));
+  if (!names.length) throw new Error('empty listing');
+  return [...new Set(names)];
+}
+
+// 手动指定仓库：GITHUB_REPO 形如 'owner/repo'
+function manualRepoBase() {
+  if (!GITHUB_REPO) return null;
+  const seg = GITHUB_REPO.split('/');
+  if (seg.length !== 2 || !seg[0] || !seg[1]) return null;
+  return { owner: seg[0], repo: seg[1] };
+}
+
+// 通过 GitHub API 拉取 docs/ 目录文件名（公开仓库无需鉴权）
+async function tryApi() {
+  const base = repoBase() || manualRepoBase();
+  if (!base) return null;
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${base.owner}/${base.repo}/contents/docs`,
+      { headers: { 'Accept': 'application/vnd.github+json' }, cache: 'no-store' }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const names = Array.isArray(data)
+        ? data.map((f) => f.name).filter((n) => /\.html?$/i.test(n))
+        : [];
+      if (names.length) { writeCache(names); return names; }
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function discoverGuides() {
+  // 在 GitHub Pages 上时，本地目录列表不可用（返回 404），直接走 API
+  if (!repoBase()) {
+    // 本地优先：解析静态服务器的目录列表（反映磁盘最新状态，含尚未提交的文件）
+    try { return await discoverLocally(); } catch (e) {}
+  }
+
+  // GitHub API：GitHub Pages 线上，或本地手动指定仓库（如 file:// 打开时）
+  const apiNames = await tryApi();
+  if (apiNames) return apiNames;
+
+  // 兜底：缓存或静态列表
+  const cached = readCache();
+  if (cached && cached.length) return cached;
+  return GUIDE_FALLBACK.slice();
+}
+
+// 重新发现：仅在结果发生变化时才重建卡片，避免无谓的刷新闪烁
+function refreshGuides() {
+  discoverGuides().then((names) => {
+    const next = names.map(makeEntry);
+    const same = next.length === guideList.length &&
+      next.every((e, i) => e.file === guideList[i].file);
+    if (!same) renderGuides(next);
+  });
+}
+
+/* ==========================================================
+   4. 卡片交互（轻微 3D 倾斜 + 点击进入）
+   ========================================================== */
+function bindCards() {
+  const canTilt = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  els.grid.querySelectorAll('.guide-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      openGuide(Number(card.dataset.index));
+    });
+
+    if (canTilt && !REDUCED) {
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform =
+          `translateY(-6px) rotateX(${(-py * 5).toFixed(2)}deg) rotateY(${(px * 5).toFixed(2)}deg)`;
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.transform = '';
+      });
+    }
+  });
+}
+
+/* ==========================================================
+   5. 页面切换：进入子页（揉纸离开 + 展开进入）
+   ========================================================== */
+function openGuide(index) {
+  const g = guideList[index];
+  if (!g || state !== 'index') return;
+
+  state = 'viewer';
+  lastFocused = document.activeElement;
+
+  // 装载内容并显示加载指示
+  els.loading.classList.remove('hide');
+  els.title.textContent = g.title;
+  document.title = g.title + ' · 旅行攻略';
+  els.frame.src = g.file;
+
+  els.viewer.classList.add('is-visible');
+  els.index.classList.add('is-hidden');
+  els.backBtn.focus();
+}
+
+/* ==========================================================
+   6. 页面切换：返回主页面（内容页揉走 + 主页面展开）
+   ========================================================== */
+function closeViewer() {
+  if (state !== 'viewer') return;
+
+  state = 'index';
+  document.title = '旅行攻略 · Travel Notes';
+
+  els.viewer.classList.remove('is-visible');
+  els.index.classList.remove('is-hidden');
+
+  // 清空 iframe，释放内存，避免下次打开看到旧内容
+  els.frame.onload = null;
+  els.frame.removeAttribute('srcdoc');
+  els.frame.src = 'about:blank';
+
+  if (lastFocused) lastFocused.focus();
+}
+
+/* ==========================================================
+   7. iframe 装载：加载完成后收起指示；超时兜底
+   ========================================================== */
+els.frame.addEventListener('load', () => els.loading.classList.add('hide'));
+window.setTimeout(() => els.loading.classList.add('hide'), 12000);
+
+/* ==========================================================
+   8. 事件绑定与初始化
+   ========================================================== */
+els.backBtn.addEventListener('click', closeViewer);
+
+// Esc 返回（当焦点仍在顶层页面时生效）
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state === 'viewer') closeViewer();
+});
+
+// 初始化：先渲染兜底列表保证首屏有内容，再尝试自动发现 docs/ 目录
+renderGuides(GUIDE_FALLBACK.map(makeEntry));
+refreshGuides();
+
+// 切回本页时重新发现：新增 / 删除攻略后切回标签页即可看到更新
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshGuides();
+});
+
+// 搜索
+els.search.addEventListener('input', applySearch);
+
+// 入场动画
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  document.body.classList.add('loaded');
+}));
+</script>
+</body>
+</html>

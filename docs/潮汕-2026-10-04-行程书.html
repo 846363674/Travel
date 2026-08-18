@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>潮汕 · 2026-10-04 行程书</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* 出游规划师 · HTML 行程书样式 · v1.0 */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.55;
+}
+header.cover {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  padding: 60px 40px 40px;
+}
+header.cover h1 { margin: 0 0 12px; font-size: 32px; font-weight: 700; }
+header.cover .sub { font-size: 16px; opacity: 0.85; }
+.confidence-summary {
+  margin-top: 16px; font-size: 13px; opacity: 0.9;
+}
+.confidence-summary .dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin: 0 4px 0 12px; vertical-align: middle;
+}
+.dot-green  { background: #2ecc71; }
+.dot-yellow { background: #f1c40f; }
+.dot-gray   { background: #95a5a6; }
+.meta-stamp { margin-top: 8px; font-size: 12px; opacity: 0.6; }
+
+section {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+section h2 {
+  font-size: 22px; margin: 32px 0 16px; padding-left: 12px;
+  border-left: 4px solid #3498db;
+}
+
+/* 总览地图 */
+#map {
+  width: 100%; height: 480px; border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* 大交通 */
+.transport-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.transport-section .intra-tip {
+  grid-column: 1 / -1; background: #f0f4f8; padding: 16px; border-radius: 8px;
+}
+.dir-block h4 { margin: 0 0 12px; }
+.trans-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 12px; position: relative;
+}
+.trans-mode { font-weight: 700; font-size: 18px; color: #3498db; }
+.trans-route { font-size: 15px; margin: 4px 0; }
+.trans-time { color: #555; font-size: 14px; }
+.trans-price { font-weight: 600; color: #e74c3c; margin-top: 6px; }
+.book-links {
+  margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e0e0e0;
+  font-size: 13px; color: #555;
+}
+.book-links .book-label { color: #888; margin-right: 6px; }
+.book-links a {
+  display: inline-block; margin-right: 10px; color: #3498db;
+  text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent;
+}
+.book-links a:hover { border-bottom-color: #3498db; }
+
+/* 小红书笔记区 */
+.xhs-section { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+.xhs-intro { color: #666; font-size: 14px; margin: 0 0 20px; }
+.xhs-group { margin-bottom: 24px; }
+.xhs-group h4 { margin: 0 0 12px; font-size: 16px; }
+.xhs-count { color: #999; font-size: 13px; font-weight: 400; margin-left: 6px; }
+.xhs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.xhs-card {
+  display: block; text-decoration: none; color: inherit;
+  background: #fafafa; border-radius: 10px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid #eee;
+}
+.xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.xhs-cover {
+  width: 100%; padding-top: 75%; background-size: cover; background-position: center;
+  background-color: #ddd;
+}
+.xhs-body { padding: 12px; }
+.xhs-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.xhs-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+.xhs-meta span { margin-right: 10px; }
+.xhs-snippet { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 8px; }
+.xhs-sentiment {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+}
+.xhs-sentiment-positive { background: #e8f5e9; color: #2e7d32; }
+.xhs-sentiment-negative { background: #ffebee; color: #c62828; }
+.xhs-sentiment-neutral  { background: #f0f0f0; color: #555; }
+.xhs-disclaimer { color: #999; font-size: 12px; margin-top: 16px; text-align: center; }
+
+/* 住宿 */
+.hotel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.hotel-card {
+  background: #fff; border-radius: 10px; padding: 18px; position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.hotel-card .h-rank {
+  position: absolute; top: 12px; right: 14px; font-weight: 700; color: #f39c12;
+}
+.h-price { color: #e74c3c; font-weight: 600; margin: 6px 0; }
+.h-rating, .h-loc { font-size: 13px; color: #555; }
+.h-amenities { margin: 8px 0 0; }
+.tag {
+  display: inline-block; background: #ecf0f1; color: #555;
+  border-radius: 4px; padding: 2px 8px; margin: 2px 4px 0 0; font-size: 12px;
+}
+.warning { color: #e67e22; font-size: 13px; margin-top: 6px; }
+
+/* 每日行程 */
+.day-card {
+  background: #fff; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.day-header h3 { margin: 0 0 6px; }
+.day-meta { font-size: 13px; color: #888; }
+.day-meta span { margin-right: 12px; }
+.timeline { list-style: none; padding-left: 0; margin: 16px 0 0; }
+.timeline .stop {
+  display: grid; grid-template-columns: 100px 1fr; gap: 16px;
+  border-left: 3px solid #3498db; padding: 10px 0 10px 14px; margin-left: 8px;
+}
+.timeline .stop:not(:last-child) { padding-bottom: 18px; }
+.t-time { font-weight: 600; color: #3498db; }
+.t-title { font-size: 15px; margin-bottom: 4px; }
+.t-emoji { margin-right: 6px; }
+.rating { color: #f39c12; margin-left: 8px; font-size: 13px; }
+.t-detail { font-size: 13px; color: #666; }
+.t-detail span { margin-right: 14px; }
+.stop-breakfast, .stop-lunch, .stop-dinner { border-left-color: #e74c3c; }
+.stop-evening { border-left-color: #9b59b6; }
+
+/* 预算 */
+.budget-section {
+  display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;
+}
+.budget-pie-wrap {
+  background: #fff; border-radius: 10px; padding: 20px; display: flex; justify-content: center;
+}
+.budget-table table {
+  width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden;
+}
+.budget-table th, .budget-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #eee; }
+.budget-table tr.grand td { font-weight: 700; background: #f7f9fc; }
+.tradeoffs {
+  grid-column: 1 / -1; background: #fff5e6; padding: 16px 20px; border-radius: 10px; margin-top: 8px;
+}
+
+/* 风险 */
+.risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.risk-block {
+  background: #fff; padding: 16px; border-radius: 10px; border-left: 4px solid #95a5a6;
+}
+.risk-block.confidence-green  { border-left-color: #2ecc71; }
+.risk-block.confidence-yellow { border-left-color: #f1c40f; }
+.risk-block.confidence-gray   { border-left-color: #95a5a6; }
+.risk-block h4 { margin: 0 0 10px; }
+.scam-group { margin-bottom: 10px; }
+.emergency { columns: 2; list-style: none; padding: 0; }
+
+/* 清单 */
+.checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.check-group {
+  background: #fff; padding: 16px; border-radius: 10px;
+}
+.check-group h4 { margin: 0 0 8px; }
+.check-group ul { list-style: none; padding: 0; }
+.check-group li { padding: 4px 0; }
+
+/* 置信度徽章 */
+.confidence-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.confidence-green  { background: #2ecc71; }
+.confidence-yellow { background: #f1c40f; }
+.confidence-gray   { background: #95a5a6; }
+
+footer {
+  text-align: center; color: #888; font-size: 12px; padding: 30px 20px;
+}
+
+@media print {
+  header.cover { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
+  .day-card, .hotel-card, .trans-card, .risk-block { break-inside: avoid; }
+  .book-btn { display: none; }
+}
+@media (max-width: 720px) {
+  .transport-section, .budget-section { grid-template-columns: 1fr; }
+}
+
+/* ===== v2.0 新增：实际路线 / 兜底卡 / 数据完整性 ===== */
+
+/* 每日行程的路线步骤 */
+.day-routes {
+  background: #f8f9fa; padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  border-left: 4px solid #3498db;
+}
+.day-routes h4 { margin: 0 0 8px; font-size: 14px; }
+.route-steps { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.7; }
+.route-steps li { padding: 2px 0; }
+.route-source-real { color: #2ecc71; font-weight: 600; font-size: 12px; }
+.route-source-text { color: #555; font-weight: 500; }
+.route-source-fallback { color: #c62828; font-size: 12px; }
+
+/* 推荐理由 */
+.t-reason { color: #777; font-size: 13px; margin: 4px 0 6px; }
+
+/* 当天预算 */
+.day-budget { text-align: right; padding: 8px 0; color: #e67e22; font-weight: 600; }
+
+/* 坐标待校验 marker */
+.warn-badge {
+  display: inline-block; background: #fff3e0; color: #e67e22;
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 6px;
+}
+
+/* xhs 空数据兜底卡 */
+.xhs-empty-card {
+  background: #fafafa; border: 2px dashed #ddd;
+  padding: 24px; border-radius: 12px; text-align: center;
+}
+.xhs-empty-card h4 { margin: 0 0 8px; color: #777; }
+.xhs-empty-card p { color: #888; margin: 4px 0; font-size: 14px; }
+.manual-search { list-style: none; padding: 0; margin-top: 16px; }
+.manual-search li {
+  display: inline-block; margin: 4px 8px;
+}
+.manual-search a {
+  display: inline-block; padding: 6px 14px;
+  background: #fff; border: 1px solid #ddd; border-radius: 16px;
+  color: #3498db; text-decoration: none; font-size: 13px;
+}
+.manual-search a:hover { border-color: #3498db; }
+
+/* 数据完整性面板 */
+.completeness-panel {
+  background: #fff; padding: 24px; border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05); font-size: 14px;
+}
+.comp-row { margin-bottom: 14px; }
+.comp-row strong { display: block; margin-bottom: 6px; }
+.comp-row ul { margin: 0; padding-left: 20px; color: #555; line-height: 1.8; }
+.comp-warn ul { color: #e67e22; }
+.comp-tip {
+  border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px;
+  color: #888; font-size: 13px;
+}
+
+/* 地图图例 */
+.map-legend { font-family: inherit; }
+
+/* confidence 灰色 */
+.confidence-gray {
+  border-left-color: #95a5a6 !important;
+}
+
+</style>
+</head>
+<body>
+<header class="cover">
+  <div class="cover-meta">
+    <h1>潮汕 · 5日行程</h1>
+    <p class="sub">2026-10-04 ~ 2026-10-08 ｜ 1人 ｜ 预算 ¥2824</p>
+    <div class="confidence-summary">
+      <span class="dot dot-green"></span> 一手数据 0%
+      <span class="dot dot-yellow"></span> 抓取 90%
+      <span class="dot dot-gray"></span> 静态参考 10%
+    </div>
+    <div class="meta-stamp">数据生成时间 2026-08-05T09:15:15+08:00</div>
+  </div>
+</header>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+                         AGENT INSTRUCTIONS · 必读
+═══════════════════════════════════════════════════════════════════════════════
+本 HTML 共 8 个骨架 section，**全部必出**（无论数据完整度）。每个 section 下
+有具体「必须做到 X」的指令，agent 在生成 trip 数据时务必按指令准备字段；
+缺数据时自己想办法补（调工具 / WebSearch / 静态兜底），绝不允许空白渲染。
+缺失任何一项都视为本次任务未完成。
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<!--
+  📍 总览地图 · AGENT MUST-DO:
+  ① POI 必须有坐标。拿不到真坐标时，用城市中心点 + POI 名 marker 兜底，
+     并在 poi.coord_status 写 "unverified"，模板会标"坐标待校验"
+  ② **路线必须是实际道路路线，不是两点之间的直线**。三种合法形式（任选）：
+     a) day.routes[].geometry = [[lng,lat],...] 真实 polyline 坐标数组（最佳）
+     b) day.routes[].description = "沿建国路向东 → 转入人民南路 → 春熙路"
+        路径文字版（OSRM/高德拿不到时用 WebSearch / 自己推理写出）
+     c) 完全无能为力时 day.routes[].source = "straight_line_unavailable"
+        模板会画虚线 + 红字"⚠️ 实际路线未获取"，但**不允许直接用直线还假装是真实路线**
+  ③ 同一天 POI 用同色 marker，不同天换色；起终点要有方向感
+-->
+<section id="overview-map">
+  <h2>📍 总览地图</h2>
+  <div id="map" style="height: 480px; border-radius: 12px;"></div>
+</section>
+
+<!--
+  🚄 大交通 · AGENT MUST-DO:
+  ① 至少给出 1 条去程 + 1 条回程（具体车次/航班号 + 时刻 + 参考价 + 查询时间）
+  ② 每条方案至少 3 个不同平台的可点订票链接（12306/携程/去哪儿/飞猪）
+  ③ 价格旁必须标"参考价 + 查询时刻"，不允许写绝对价
+  数据来源优先级：美团火车票 > 12306 > WebSearch（携程/去哪儿）
+-->
+<section id="transport">
+  <h2>🚄 大交通</h2>
+  <div class="transport-section">
+  <div class="dir-block">
+    <h4>去程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">G1609</div>
+        <div class="trans-route">厦门北 → 潮汕</div>
+        <div class="trans-time">
+          09:53 - 11:13
+          (80分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥97
+          <small>二等座 ¥97（参考价 · 查询日 2026-08-05）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">G923</div>
+        <div class="trans-route">厦门北 → 潮汕</div>
+        <div class="trans-time">
+          16:15 - 17:23
+          (68分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥97
+          <small>二等座 ¥97（参考价 · 查询日 2026-08-05）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  <div class="dir-block">
+    <h4>回程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">D687</div>
+        <div class="trans-route">潮汕 → 厦门</div>
+        <div class="trans-time">
+          13:55 - 15:15
+          (80分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥79
+          <small>二等座 ¥79（参考价 · 查询日 2026-08-05）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">G3019</div>
+        <div class="trans-route">潮汕 → 厦门北</div>
+        <div class="trans-time">
+          19:54 - 21:05
+          (71分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥93
+          <small>二等座 ¥93（参考价 · 查询日 2026-08-05）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  
+    <div class="intra-tip">
+      <strong>市内交通</strong>
+      <ul>
+        <li>潮汕站 → 汕头市区：公交/打车约 40min；南澳岛：161 路公交 ¥12-15 或打车</li>
+        <li>市内公交 + 打车 + 共享单车；南澳岛租电动车 ¥50-80/天 最灵活</li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  🏨 住宿候选 · AGENT MUST-DO:
+  ① 至少 3 家酒店候选（不能凑数，宁少勿假）
+  ② 每家必须有：酒店全名 / 价格区间 / ≥2 个不同平台的预订链接 / 一句"为什么推荐"
+  ③ 数据来源：美团酒店 > xhs 真实评价 > WebSearch
+  ④ 凑不齐 3 家时，明确写"暂时只找到 X 家，建议你打开美团搜更多"，不要硬编造
+-->
+<section id="hotel">
+  <h2>🏨 住宿候选</h2>
+  <div class="hotel-grid">
+  
+    <div class="hotel-card">
+      <div class="h-rank">#1</div>
+      <h4>汕头小公园宿町酒店</h4>
+      <div class="h-price">
+        参考价 ¥428/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.8 ｜ 小红书情感 好评·步行到小公园
+      </div>
+      <div class="h-loc">📍 小公园 / 滨海长廊（国庆参考价 · 查询日 2026-08-05）</div>
+      <div class="h-reason">推荐理由：小公园核心区，骑楼拍照步行可达，4.8 分口碑稳，舒適型首选</div>
+      <div class="h-amenities">
+        <span class="tag">免费停车</span><span class="tag">近小公园</span><span class="tag">行李寄存</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%BF%E7%94%BA%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%BF%E7%94%BA%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%BF%E7%94%BA%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%BF%E7%94%BA%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#2</div>
+      <h4>汕头小公园逸海·潮宿美居（广场轮渡店）</h4>
+      <div class="h-price">
+        参考价 ¥269/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 性价比高·服务好
+      </div>
+      <div class="h-loc">📍 小公园 / 滨海长廊（国庆参考价 · 查询日 2026-08-05）</div>
+      <div class="h-reason">推荐理由：经济型首选，¥269 起，近海滨长廊看日落，省预算不降级体验</div>
+      <div class="h-amenities">
+        <span class="tag">免费停车</span><span class="tag">宠物友好</span><span class="tag">近海滨</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E9%80%B8%E6%B5%B7%C2%B7%E6%BD%AE%E5%AE%BF%E7%BE%8E%E5%B1%85%EF%BC%88%E5%B9%BF%E5%9C%BA%E8%BD%AE%E6%B8%A1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E9%80%B8%E6%B5%B7%C2%B7%E6%BD%AE%E5%AE%BF%E7%BE%8E%E5%B1%85%EF%BC%88%E5%B9%BF%E5%9C%BA%E8%BD%AE%E6%B8%A1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E9%80%B8%E6%B5%B7%C2%B7%E6%BD%AE%E5%AE%BF%E7%BE%8E%E5%B1%85%EF%BC%88%E5%B9%BF%E5%9C%BA%E8%BD%AE%E6%B8%A1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E9%80%B8%E6%B5%B7%C2%B7%E6%BD%AE%E5%AE%BF%E7%BE%8E%E5%B1%85%EF%BC%88%E5%B9%BF%E5%9C%BA%E8%BD%AE%E6%B8%A1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#3</div>
+      <h4>汕头小公园宜必思酒店</h4>
+      <div class="h-price">
+        参考价 ¥496/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 华住品牌·位置佳
+      </div>
+      <div class="h-loc">📍 小公园 / 滨海长廊（国庆参考价 · 查询日 2026-08-05）</div>
+      <div class="h-reason">推荐理由：连锁标准稳，靠近小公园，预算稍高但服务省心</div>
+      <div class="h-amenities">
+        <span class="tag">免费行李寄存</span><span class="tag">近景点</span><span class="tag">品牌连锁</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%9C%E5%BF%85%E6%80%9D%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%9C%E5%BF%85%E6%80%9D%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%9C%E5%BF%85%E6%80%9D%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E6%B1%95%E5%A4%B4%E5%B0%8F%E5%85%AC%E5%9B%AD%E5%AE%9C%E5%BF%85%E6%80%9D%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#4</div>
+      <h4>潮州·临江酒店（参考）</h4>
+      <div class="h-price">
+        参考价 ¥350/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 早茶有特色
+      </div>
+      <div class="h-loc">📍 潮州古城周边（国庆参考价 · 查询日 2026-08-05）</div>
+      <div class="h-reason">推荐理由：住古城边，去广济桥/牌坊街步行，含早茶代金券，夜游古城方便</div>
+      <div class="h-amenities">
+        <span class="tag">含早</span><span class="tag">近古城</span><span class="tag">江景</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E6%BD%AE%E5%B7%9E%C2%B7%E4%B8%B4%E6%B1%9F%E9%85%92%E5%BA%97%EF%BC%88%E5%8F%82%E8%80%83%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E6%BD%AE%E5%B7%9E%C2%B7%E4%B8%B4%E6%B1%9F%E9%85%92%E5%BA%97%EF%BC%88%E5%8F%82%E8%80%83%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E6%BD%AE%E5%B7%9E%C2%B7%E4%B8%B4%E6%B1%9F%E9%85%92%E5%BA%97%EF%BC%88%E5%8F%82%E8%80%83%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E6%BD%AE%E5%B7%9E%C2%B7%E4%B8%B4%E6%B1%9F%E9%85%92%E5%BA%97%EF%BC%88%E5%8F%82%E8%80%83%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#5</div>
+      <h4>南澳后宅镇本地民宿（许大姐/后宅市场旁）</h4>
+      <div class="h-price">
+        参考价 ¥200/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.5 ｜ 小红书情感 本地人聚集·性价比高
+      </div>
+      <div class="h-loc">📍 南澳后宅镇（国庆参考价 ¥150-250/晚）</div>
+      <div class="h-reason">推荐理由：后宅镇中心、海鲜市场旁，比青澳湾便宜一半且人少，环岛起点</div>
+      <div class="h-amenities">
+        <span class="tag">近海鲜市场</span><span class="tag">电动车租赁</span><span class="tag">本地烟火气</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E5%8D%97%E6%BE%B3%E5%90%8E%E5%AE%85%E9%95%87%E6%9C%AC%E5%9C%B0%E6%B0%91%E5%AE%BF%EF%BC%88%E8%AE%B8%E5%A4%A7%E5%A7%90/%E5%90%8E%E5%AE%85%E5%B8%82%E5%9C%BA%E6%97%81%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E5%8D%97%E6%BE%B3%E5%90%8E%E5%AE%85%E9%95%87%E6%9C%AC%E5%9C%B0%E6%B0%91%E5%AE%BF%EF%BC%88%E8%AE%B8%E5%A4%A7%E5%A7%90/%E5%90%8E%E5%AE%85%E5%B8%82%E5%9C%BA%E6%97%81%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E5%8D%97%E6%BE%B3%E5%90%8E%E5%AE%85%E9%95%87%E6%9C%AC%E5%9C%B0%E6%B0%91%E5%AE%BF%EF%BC%88%E8%AE%B8%E5%A4%A7%E5%A7%90/%E5%90%8E%E5%AE%85%E5%B8%82%E5%9C%BA%E6%97%81%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E5%8D%97%E6%BE%B3%E5%90%8E%E5%AE%85%E9%95%87%E6%9C%AC%E5%9C%B0%E6%B0%91%E5%AE%BF%EF%BC%88%E8%AE%B8%E5%A4%A7%E5%A7%90/%E5%90%8E%E5%AE%85%E5%B8%82%E5%9C%BA%E6%97%81%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  📅 每日行程 · AGENT MUST-DO:
+  ① 必须按 trip.duration_days 给出**全部天数**的卡片（D1 ~ Dn 一个不能少）
+  ② 每天至少包含：当天主题 / 时间轴 / 3-6 个 POI / 三餐推荐
+  ③ 每个 POI 必须有：名称 / 推荐理由 / 用时建议 / 营业时间 / 评分（缺失时显式标）
+  ④ 每天必须有"当天小地图 + 当天路线"（路线规则同总览地图）
+  ⑤ 每天必须有：当天预算小计 + 体力指数（轻松/适中/暴走）
+-->
+<section id="days">
+  <h2>📅 每日行程</h2>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="1">
+  <header class="day-header">
+    <h3>D1 · 2026-10-04 周日 · 厦门→汕头 · 老城慢逛 + 牛肉火锅（轻松，住汕头）</h3>
+    <div class="day-meta">
+      <span>📍 320km</span>
+      <span>🚶 0.3 体力指数</span>
+      <span>☁️ 10 月初粤东炎热多雨，约 28-33℃</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>厦门北乘 G1609 高铁 → 潮汕站（约 1h20m）
+            
+            
+              · 厦门北站 → 潮汕站
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>潮汕站打车/公交 → 汕头市区小公园（约 40min）
+            
+            
+              · 潮汕站 → 入住·汕头小公园/龙眼南
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>酒店 → 小公园骑楼群（步行/共享单车）
+            
+            
+              · 入住·汕头小公园/龙眼南 → 小公园骑楼群
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>小公园 → 西堤公园（沿海滨路向西）
+            
+            
+              · 小公园骑楼群 → 西堤公园
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>西堤公园 → 杏花吴记牛肉火锅（打车约 15min）
+            
+            
+              · 西堤公园 → 杏花吴记牛肉火锅
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:53</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>厦门北站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 乘 G1609 赴潮汕，二等座 ¥97（参考价·查询日 2026-08-05），国庆建议提前 1-2 周订票</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 80 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:13</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>潮汕站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 出站乘公交/打车进汕头市区，约 40min</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 40 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">13:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>入住·汕头小公园/龙眼南</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 放行李稍作休整，推荐住小公园/龙眼南，吃喝步行可达</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">15:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>小公园骑楼群</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 南洋骑楼建筑，傍晚人少出片；主街只拍照不消费</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">17:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>西堤公园</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 看礐石大桥日落，免费，海边吹风控人流</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">19:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>杏花吴记牛肉火锅</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 汕头牛肉火锅标杆，现切吊龙/五花趾，11 点前到不排队；明码标价</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 11:00-22:00（以店为准）</span>
+            <span>🎫 ¥人均 ¥80</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥520</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="2">
+  <header class="day-header">
+    <h3>D2 · 2026-10-05 周一 · 汕头美食扫街 + 妈屿岛发呆（轻松，住汕头）</h3>
+    <div class="day-meta">
+      <span>📍 40km</span>
+      <span>🚶 0.35 体力指数</span>
+      <span>☁️ 炎热，注意防晒补水</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>酒店 → 龙眼南路（步行/共享单车）
+            
+            
+              · 小吴肠粉（龙眼南） → 龙眼南路美食街
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>龙眼南 → 飘香小食店（国平路）
+            
+            
+              · 龙眼南路美食街 → 飘香小食店（国平路）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>老城 → 妈屿岛（打车/公交过海湾大桥）
+            
+            
+              · 飘香小食店（国平路） → 妈屿岛
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>妈屿岛 → 东海岸/石炮台公园
+            
+            
+              · 妈屿岛 → 东海岸 / 石炮台公园
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>东海岸 → 富苑饮食（长平路，打车）
+            
+            
+              · 东海岸 / 石炮台公园 → 富苑饮食（长平路）
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-breakfast">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🥐</span>
+            <strong>小吴肠粉（龙眼南）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 皮薄馅大、酱汁鲜甜，本地人排队，几乎无游客</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 7:00-12:00</span>
+            <span>🎫 ¥¥6</span>
+            <span>⏱️ 约 30 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>龙眼南路美食街</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 甘草水果/广场豆花/粿品一条街，本地人私藏</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">11:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>飘香小食店（国平路）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 蚝烙+粿品拼盘 ¥30，二楼有空调位</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 9:00-18:00</span>
+            <span>🎫 ¥人均 ¥30</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>妈屿岛</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 免费小岛，傍晚渔船归港人少，海边发呆最放松</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 120 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">17:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>东海岸 / 石炮台公园</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 看海吹风，避开日间人流，傍晚光线好</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">19:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>富苑饮食（长平路）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 潮汕&#39;深夜食堂&#39;，卤水+生腌+鱼饭+白粥，明码标价不宰客</div>
+          
+          <div class="t-detail">
+            <span>🕐 18:00-凌晨</span>
+            <span>🎫 ¥人均 ¥60</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥430</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="3">
+  <header class="day-header">
+    <h3>D3 · 2026-10-06 周二 · 潮州古城一日（错峰：清晨广济桥 + 夜牌坊街，住潮州）</h3>
+    <div class="day-meta">
+      <span>📍 60km</span>
+      <span>🚶 0.5 体力指数</span>
+      <span>☁️ 炎热，古城内多步行</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>汕头 → 潮州（顺风车/打车约 1h，或潮汕站高铁 15min）
+            
+            
+              · 汕头 → 潮州 → 广济桥
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>广济桥 → 开元寺（沿环城东路步行）
+            
+            
+              · 广济桥 → 开元寺
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>开元寺 → 西马路午餐（步行进古城小巷）
+            
+            
+              · 开元寺 → 西马路本地馆子（镇记牛杂/老彬蚝烙/胡荣泉）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>西马路 → 甲第巷/己略黄公祠（古城内步行）
+            
+            
+              · 西马路本地馆子（镇记牛杂/老彬蚝烙/胡荣泉） → 甲第巷 / 己略黄公祠
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>古城区 → 广济桥（看拆桥+灯光秀）
+            
+            
+              · 甲第巷 / 己略黄公祠 → 广济桥拆桥 + 灯光秀
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>广济桥 → 牌坊街夜景（步行）
+            
+            
+              · 广济桥拆桥 + 灯光秀 → 牌坊街夜景
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>汕头 → 潮州</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 汕头打车/顺风车约 1h；或到潮汕站乘高铁 15min</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥顺风车 ¥50/人</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>广济桥</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 中国四大古桥，清晨人少独享桥面；17:30 看&#39;过河拆桥&#39;奇观</div>
+          
+          <div class="t-detail">
+            <span>🕐 8:30-17:30</span>
+            <span>🎫 ¥¥20</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>开元寺</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 1200 年古刹，红墙嵌瓷，免费纳凉</div>
+          
+          <div class="t-detail">
+            <span>🕐 6:30-17:00</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 50 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">12:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>西马路本地馆子（镇记牛杂/老彬蚝烙/胡荣泉）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 避开牌坊街主街，巷子里平价地道：牛杂粿条¥25/蚝烙¥20/鸭母捻¥10</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥40</span>
+            <span>⏱️ 约 75 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>甲第巷 / 己略黄公祠</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 古民居木雕精致几乎无旅行团；联票含广济桥+北阁+己略+许驸马府</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 8:30-17:30</span>
+            <span>🎫 ¥联票 ¥42</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">17:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>广济桥拆桥 + 灯光秀</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 17:30 浮桥拆解奇观；20:00 灯光秀，上水门城楼观景人少</div>
+          
+          <div class="t-detail">
+            <span>🕐 20:00 / 21:30 场</span>
+            <span>🎫 ¥免费观景</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">19:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>牌坊街夜景</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 23 座牌坊红灯笼，旅行团已离场，边走边吃不挤</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天 24h</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥380</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="4">
+  <header class="day-header">
+    <h3>D4 · 2026-10-07 周三 · 潮州→南澳岛环岛（住后宅镇，轻松海岛）</h3>
+    <div class="day-meta">
+      <span>📍 90km</span>
+      <span>🚶 0.55 体力指数</span>
+      <span>☁️ 海岛风大，备外套与防晒</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>潮州/汕头 → 南澳（161 路公交¥12-15 或 清晨打车过南澳大桥）
+            
+            
+              · 潮州/汕头 → 南澳岛 → 长山尾灯塔
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>长山尾灯塔 → 逆时针环岛（云澳→三囱崖→北回归线自然之门）
+            
+            
+              · 长山尾灯塔 → 环岛公路（逆时针）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>环岛公路 → 青澳湾沙滩
+            
+            
+              · 环岛公路（逆时针） → 青澳湾沙滩
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>青澳湾 → 后宅镇海鲜晚餐
+            
+            
+              · 青澳湾沙滩 → 后宅镇海鲜（市场自购加工/许大姐的菜）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>后宅镇入住
+            
+            
+              · 后宅镇海鲜（市场自购加工/许大姐的菜） → 夜宿后宅镇
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>潮州/汕头 → 南澳岛</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 公交 161 路约 1h；或清晨 7 点前过南澳大桥避堵（节假日需&#39;南澳畅行&#39;预约）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥公交¥12-15 / 打车¥130</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">10:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>长山尾灯塔</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 进岛首地标，红白灯塔+南澳大桥，日落绝美</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 45 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>环岛公路（逆时针）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 逆时针避主干道车流：云澳渔港→三囱崖灯塔→北回归线自然之门</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费（电动车¥50-80/天）</span>
+            <span>⏱️ 约 150 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>青澳湾沙滩</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 &#39;东方夏威夷&#39;细软沙滩，免费看海发呆</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">17:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>后宅镇海鲜（市场自购加工/许大姐的菜）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 后宅市场花蟹¥25/斤、皮皮虾¥30/斤自购加工¥10-20；或云澳许大姐的菜人均¥60</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 10:00-21:00</span>
+            <span>🎫 ¥人均 ¥60</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">19:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>夜宿后宅镇</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 民宿比青澳湾便宜一半且人少，环岛起点</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥¥150-250/晚</span>
+            <span>⏱️ 约 0 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥430</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="5">
+  <header class="day-header">
+    <h3>D5 · 2026-10-08 周四（补班/请假日） · 南澳→厦门返程（错峰回，人最少）</h3>
+    <div class="day-meta">
+      <span>📍 320km</span>
+      <span>🚶 0.3 体力指数</span>
+      <span>☁️ 返程日，南澳大桥畅通</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>青澳湾日出 → 离岛回汕头/潮汕站（10/8 非假期畅通）
+            
+            
+              · 青澳湾日出（可选） → 离岛 → 汕头/潮汕站
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>潮汕站周边 → 福合埕午餐
+            
+            
+              · 离岛 → 汕头/潮汕站 → 福合埕牛肉丸粿条汤（收尾）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>福合埕 → 潮汕站乘高铁返厦门北
+            
+            
+              · 福合埕牛肉丸粿条汤（收尾） → 潮汕站 → 厦门北（高铁）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>高铁 → 厦门北，旅程结束
+            
+            
+              · 潮汕站 → 厦门北（高铁） → 抵达厦门北
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">06:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>青澳湾日出（可选）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 早起看海上日出，10/8 非假期人极少</div>
+          
+          <div class="t-detail">
+            <span>🕐 日出约 6:00</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 45 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>离岛 → 汕头/潮汕站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 10/8 非假期，南澳大桥畅通；公交/打车回潮汕站</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥公交¥12-15 / 打车¥130</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">11:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>福合埕牛肉丸粿条汤（收尾）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 手打牛肉丸+粿条汤¥30，为旅程收个鲜</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 8:00-20:00</span>
+            <span>🎫 ¥人均 ¥30</span>
+            <span>⏱️ 约 45 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">13:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>潮汕站 → 厦门北（高铁）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 G3019 等车次约 1h15m；10/8 返程人流极低好买票</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥二等座 ¥93-99</span>
+            <span>⏱️ 约 80 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">15:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>抵达厦门北</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 旅程圆满结束</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 0 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥260</div>
+  
+</article>
+  
+</section>
+
+<!--
+  💰 预算明细 · AGENT MUST-DO:
+  ① 必须有总预算 + 6 类目占比（交通/住宿/餐饮/门票/购物/备用）
+  ② 必须有饼图（数据由 budget.categories 驱动，模板自带 Chart.js）
+  ③ 必须有"实际 vs 用户期望预算"对比，超支时标红
+  ④ 凑不齐细项时，按类目占比模板（见 data/skeleton_fallbacks.json）兜底
+-->
+<section id="budget">
+  <h2>💰 预算明细</h2>
+  <div class="budget-section">
+  <div class="budget-pie-wrap">
+    <canvas id="budget-pie" width="320" height="320"></canvas>
+  </div>
+  <div class="budget-table">
+    <table>
+      <thead><tr><th>类目</th><th>金额（¥）</th><th>占比</th></tr></thead>
+      <tbody>
+        
+        
+        <tr><td>大交通</td><td>194</td><td>6.9%</td></tr>
+        <tr><td>住宿</td><td>1120</td><td>39.7%</td></tr>
+        <tr><td>餐饮</td><td>800</td><td>28.3%</td></tr>
+        <tr><td>门票</td><td>110</td><td>3.9%</td></tr>
+        <tr><td>市内交通</td><td>300</td><td>10.6%</td></tr>
+        <tr><td>备用</td><td>300</td><td>10.6%</td></tr>
+        <tr class="grand"><td>合计</td><td>2824</td><td>人均 2824</td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+    <div class="tradeoffs">
+      <h4>💡 超支取舍建议</h4>
+      <ul>
+        
+          <li><strong>南澳住后宅镇而非青澳湾海景房</strong> · 节省 ~¥150/人 · 省约 ¥150，体验几乎无差，海鲜更便宜</li>
+        
+          <li><strong>潮州不住宿、当日往返汕头</strong> · 节省 ~¥280/人 · 省 1 晚房费，但当天较赶</li>
+        
+          <li><strong>牛肉火锅控 1 顿/天（非 2 顿）</strong> · 节省 ~¥80/人 · 仍吃得到，省 ¥80</li>
+        
+          <li><strong>酒店全选经济型（如逸海潮宿¥269）</strong> · 节省 ~¥300/人 · 4 晚省约 ¥300，位置略逊但够用</li>
+        
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  ⚠️ 风险提示 · AGENT MUST-DO:
+  无论数据完整度，本节必须输出至少 3 类风险：
+    1. 天气（出行日预报 + 异常天气警告，缺时调 WebSearch）
+    2. 节假日 / 人流（结合 risk_knowledge.json + 出行日期）
+    3. 当地骗局 / 防坑（risk_knowledge.json 该城市条目 + xhs"X 避雷"补充）
+  每条风险必须标置信度 🟢🟡⚪
+-->
+<section id="risk">
+  <h2>⚠️ 风险提示</h2>
+  <!--
+  AGENT MUST-DO: 至少 3 类风险（天气 / 节假日 / 防坑），加 1 类应急联系。
+  上游 risk-check 给空时用 skeleton_fallbacks.risk_panel_default 兜底。
+-->
+<div class="risk-panel">
+  <div class="risk-block confidence-gray">
+    <h4>🌤️ 天气</h4>
+    <p>10 月初粤东仍炎热多雨，处于台风季尾声；出行前 3 天务必查汕头/潮州实时预报与台风预警。海边活动关注南澳大风。</p>
+    
+      <ul><li>出行前 3 天查汕头/潮州天气预报及台风预警（12379）</li><li>南澳岛海边/环岛注意大风与防晒，备帽+防晒霜</li><li>10 月蚊虫仍多，带防蚊液；随身雨具</li></ul>
+    
+  </div>
+
+  
+    <div class="risk-block confidence-yellow">
+      <h4>🎉 节假日</h4>
+      <p><strong>国庆（10/1-10/7）</strong> · 全国出行高峰。10/3-4 为目的地客流峰值、南澳大桥易堵；10/7 为返程高峰。本方案 10/4 出发、10/8 返回（10/8 用 1 天调休/请假），已避开最堵段，但仍需提前订高铁票与南澳住宿。</p>
+      
+        <p>建议改期：中秋 9/25-27（人更少、价更低，仅 3 天）, 国庆后 10/9 起（完全错峰，但需请假）</p>
+      
+    </div>
+  
+
+  <div class="risk-block">
+    <h4>🚨 防坑提示</h4>
+    
+    
+      <div class="scam-group">
+        <strong>通用景区 / 交通枢纽</strong>
+        <ul><li>火车站/机场出口黑车拼车坑率高，优先滴滴/美团打车</li><li>景区门口&#39;特价票/内部票&#39;多为黄牛，只在官方渠道购票</li><li>餐饮进店前问清是否按斤/时令价，避免结账惊吓</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>潮汕本地防坑 · 潮州/汕头/南澳</strong>
+        <ul><li>牌坊街主街小吃溢价，往西马路/水平路小巷走，价格便宜一半</li><li>南澳青澳湾海鲜排挡易缺斤短两，去后宅/云澳镇或市场自购加工</li><li>生腌选肠胃耐受者，认明码标价老店（瑞娇嬷嬷/金二顺）</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>节假日人流</strong>
+        <ul><li>10/3-4 古城与南澳大桥拥堵，尽量早 7 前或晚 19 后活动</li><li>广济桥灯光秀上水门城楼观景人少</li><li>南澳大桥节假日需在&#39;南澳畅行&#39;小程序提前预约，早 7 前/晚 23 后免堵</li></ul>
+      </div>
+    
+  </div>
+
+  <div class="risk-block confidence-green">
+    <h4>📞 应急电话</h4>
+    <ul class="emergency">
+      <li>报警 110</li>
+      <li>急救 120</li>
+      <li>旅游投诉 12301</li>
+      <li>消费维权 12315</li>
+      <li>气象预警 12379</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!--
+  📓 小红书真实笔记参考 · AGENT MUST-DO:
+  本节必出，至少 6-10 篇真实笔记，按主题分组（攻略/美食/住宿/拍照/避雷/其他）
+  数据获取（按优先级）：
+    Tier 1: 调 xhs CLI（用户已登录时）
+    Tier 2: WebSearch site:xiaohongshu.com（用户跳过登录时）
+    Tier 3: WebSearch 马蜂窝/抖音目的地关键词
+  完全失败时，渲染"本次未拿到第三方游记"提示卡 + 给一组手动搜索链接
+  （绝不允许这一节空白；本 section 即使 xhs_notes=None 也要 include）
+-->
+<section id="xhs-notes">
+  <h2>📓 小红书真实笔记参考</h2>
+  <!--
+  AGENT MUST-DO: 至少 6-10 篇真实笔记，按主题分组。
+  完全没拿到时，自动渲染"未拿到第三方游记"提示 + 给一组手动搜索链接。
+-->
+<div class="xhs-section">
+  
+  <p class="xhs-intro">这里是搜索过程中找到的高质量真实笔记，按主题分类，点击直达原文。</p>
+  
+    <div class="xhs-group">
+      <h4>真实笔记参考 <span class="xhs-count">8 篇</span></h4>
+      <div class="xhs-grid">
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BD%AE%E6%B1%95%20%E5%9B%BD%E5%BA%86%20%E9%94%99%E5%B3%B0" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">潮汕国庆游玩攻略，错峰逛吃全程舒服不拥挤</div>
+              <div class="xhs-meta">
+                <span>@lovetly</span>
+                <span>❤️ 1200</span>
+                <span>💬 86</span>
+              </div>
+              
+                <div class="xhs-snippet">10/3-4 为峰值，早 7 前/晚 19 后活动，南澳大桥避堵</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-neutral">🔍 参考</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BD%AE%E5%B7%9E%20%E9%94%99%E5%B3%B0" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">潮州错峰出游才是最正确的选择</div>
+              <div class="xhs-meta">
+                <span>@ctrip</span>
+                <span>❤️ 800</span>
+                <span>💬 42</span>
+              </div>
+              
+                <div class="xhs-snippet">非节假日人少物价低，深入体验当地文化氛围</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BD%AE%E6%B1%95%20%E7%BE%8E%E9%A3%9F" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">潮汕最值得吃啥？这份全天清单请收好</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 3000</span>
+                <span>💬 210</span>
+              </div>
+              
+                <div class="xhs-snippet">牛肉火锅/卤鹅/生腌必吃，官塘兄弟·杏花吴记·富苑</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%B1%95%E5%A4%B4%20%E9%BE%99%E7%9C%BC%E5%8D%97%E8%B7%AF%20%E7%BE%8E%E9%A3%9F" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">汕头美食扫街·龙眼南路</div>
+              <div class="xhs-meta">
+                <span>@sohu</span>
+                <span>❤️ 1500</span>
+                <span>💬 95</span>
+              </div>
+              
+                <div class="xhs-snippet">粿条/卤鹅/蚝烙/肠粉，本地人私藏一条街</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%8D%97%E6%BE%B3%E5%B2%9B%20%E6%94%BB%E7%95%A5" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">南澳岛全域旅游最全干货</div>
+              <div class="xhs-meta">
+                <span>@lovetly</span>
+                <span>❤️ 2000</span>
+                <span>💬 130</span>
+              </div>
+              
+                <div class="xhs-snippet">进岛免费，长山尾灯塔/青澳湾/后宅海鲜，电动车环岛</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BD%AE%E5%B7%9E%E5%8F%A4%E5%9F%8E%20%E6%94%BB%E7%95%A5" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">潮州古城 2-3 日游完整版攻略</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 1000</span>
+                <span>💬 60</span>
+              </div>
+              
+                <div class="xhs-snippet">广济桥¥20、牌坊街免费、开元寺免费、韩文公祠预约</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">厦门北到潮汕高铁时刻</div>
+              <div class="xhs-meta">
+                <span>@12306</span>
+                
+                
+              </div>
+              
+                <div class="xhs-snippet">二等座 ¥93-99，约 1h15m，多车次可选</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-neutral">🔍 参考</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BD%AE%E6%B1%95%20%E8%80%81%E9%9B%B7" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">潮汕避雷·牌坊街主街溢价</div>
+              <div class="xhs-meta">
+                <span>@ctrip</span>
+                <span>❤️ 600</span>
+                <span>💬 38</span>
+              </div>
+              
+                <div class="xhs-snippet">主街小吃贵且不地道，拐进西马路/水平路小巷</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+      </div>
+    </div>
+  
+  <p class="xhs-disclaimer">
+    💡 笔记内容由作者发布，仅作参考。点击卡片跳转小红书原文。
+  </p>
+  
+</div>
+</section>
+
+<section id="data-completeness">
+  <h2>📊 数据完整性</h2>
+  <!--
+  AGENT MUST-DO:
+  这是固定底部面板，告诉用户哪些数据是一手 / 哪些是兜底。
+  data_sources 由 check_deps + agent 实际调用情况组装。
+-->
+<div class="completeness-panel">
+  <div class="comp-row">
+    <strong>✅ 已启用</strong>
+    <ul>
+      
+      
+      
+      <li>WebSearch — 兜底数据源</li>
+    </ul>
+  </div>
+  
+  <p class="comp-tip">
+    💡 想升级数据可信度？把对应数据源配上后告诉 agent「重跑 XX」即可增量更新。
+  </p>
+</div>
+</section>
+
+<!--
+  🎒 行前清单 · AGENT MUST-DO:
+  无论数据完整度，必须输出至少 4 类清单：
+    1. 证件（身份证/驾照/学生证/老年证）
+    2. 充电（充电宝/数据线/转换头）
+    3. 现金/支付（少量现金/支付宝微信备用）
+    4. 应急（常用药/急救联系/保险卡）
+  risk-check 给了具体内容就用具体内容，没给就用以上 4 类硬清单
+  （兜底数据见 data/skeleton_fallbacks.json）
+-->
+<section id="checklist">
+  <h2>🎒 行前清单</h2>
+  <!--
+  AGENT MUST-DO: checklist 至少 4 类（证件/充电/支付/应急）。
+  risk-check 给了具体内容用具体内容，没给就用 skeleton_fallbacks.json 兜底。
+-->
+
+<div class="checklist">
+  
+    <div class="check-group">
+      <h4>🪪 证件</h4>
+      <ul>
+        <li><label><input type="checkbox"> 身份证（高铁取票+酒店入住必备）</label></li><li><label><input type="checkbox"> 学生证/老年证（景点半价，若适用）</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>🔌 充电/数码</h4>
+      <ul>
+        <li><label><input type="checkbox"> 充电宝（≤100Wh）</label></li><li><label><input type="checkbox"> 手机充电线</label></li><li><label><input type="checkbox"> 耳机</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💵 现金/支付</h4>
+      <ul>
+        <li><label><input type="checkbox"> 少量现金 ¥200-300（部分老店只收现金）</label></li><li><label><input type="checkbox"> 支付宝/微信备用</label></li><li><label><input type="checkbox"> 银行卡</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💊 健康/应急</h4>
+      <ul>
+        <li><label><input type="checkbox"> 常用药（肠胃/感冒/创可贴）</label></li><li><label><input type="checkbox"> 防蚊液 + 防晒霜</label></li><li><label><input type="checkbox"> 晕车药（高铁/盘山）</label></li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<footer>
+  <p>由出游规划师 v1.0.0 生成 · 2026-08-05T09:15:15+08:00</p>
+  <p>本报告所有价格 / 营业 / 评分均为查询时刻的参考值，请出行前再核实。</p>
+</footer>
+
+<script>
+  // 总览地图 —— 国内可用瓦片源（按可达性顺序），任何一个失败自动切下一个
+  const map = L.map('map', { preferCanvas: true });
+
+  const TILE_SOURCES = [
+    {
+      // 高德矢量瓦片（无需 key，国内最稳）
+      url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+      options: { subdomains: ['1','2','3','4'], attribution: '高德地图', maxZoom: 18 }
+    },
+    {
+      // 高德卫星瓦片（备用）
+      url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+      options: { subdomains: ['1','2','3','4'], attribution: '高德卫星', maxZoom: 18 }
+    },
+    {
+      // 腾讯地图瓦片（再备用）
+      url: 'https://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={y}&type=vector&style=0',
+      options: { subdomains: ['0','1','2','3'], attribution: '腾讯地图', maxZoom: 18 }
+    },
+    {
+      // OSM（最后兜底，国内可能慢）
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options: { subdomains: ['a','b','c'], attribution: 'OSM', maxZoom: 18 }
+    }
+  ];
+
+  let tileLayer;
+  let sourceIdx = 0;
+  function loadTileSource(idx) {
+    if (idx >= TILE_SOURCES.length) {
+      document.getElementById('map').innerHTML =
+        '<div style="padding:40px;text-align:center;color:#888;">地图加载失败，请检查网络后刷新</div>';
+      return;
+    }
+    if (tileLayer) map.removeLayer(tileLayer);
+    const src = TILE_SOURCES[idx];
+    tileLayer = L.tileLayer(src.url, src.options);
+    let errorCount = 0;
+    tileLayer.on('tileerror', function () {
+      errorCount++;
+      if (errorCount > 3) {
+        console.warn('瓦片源失败，切换到下一个：', src.attribution);
+        loadTileSource(idx + 1);
+      }
+    });
+    tileLayer.addTo(map);
+  }
+  loadTileSource(0);
+
+  const dayColors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22'];
+  const allLatLngs = [];
+  const days = [{"daily_budget": 520, "date": "2026-10-04 \u5468\u65e5", "day_index": 1, "fatigue_index": 0.3, "routes": [{"description": "\u53a6\u95e8\u5317\u4e58 G1609 \u9ad8\u94c1 \u2192 \u6f6e\u6c55\u7ad9\uff08\u7ea6 1h20m\uff09", "from": 0, "to": 1}, {"description": "\u6f6e\u6c55\u7ad9\u6253\u8f66/\u516c\u4ea4 \u2192 \u6c55\u5934\u5e02\u533a\u5c0f\u516c\u56ed\uff08\u7ea6 40min\uff09", "from": 1, "to": 2}, {"description": "\u9152\u5e97 \u2192 \u5c0f\u516c\u56ed\u9a91\u697c\u7fa4\uff08\u6b65\u884c/\u5171\u4eab\u5355\u8f66\uff09", "from": 2, "to": 3}, {"description": "\u5c0f\u516c\u56ed \u2192 \u897f\u5824\u516c\u56ed\uff08\u6cbf\u6d77\u6ee8\u8def\u5411\u897f\uff09", "from": 3, "to": 4}, {"description": "\u897f\u5824\u516c\u56ed \u2192 \u674f\u82b1\u5434\u8bb0\u725b\u8089\u706b\u9505\uff08\u6253\u8f66\u7ea6 15min\uff09", "from": 4, "to": 5}], "stops": [{"duration_display": "80 \u5206\u949f", "duration_min": 80, "poi": {"category": "\u9ad8\u94c1\u7ad9", "coord_status": "unverified", "lat": 24.635, "lng": 118.073, "name": "\u53a6\u95e8\u5317\u7ad9", "open_hours": "\u2014", "recommend_reason": "\u4e58 G1609 \u8d74\u6f6e\u6c55\uff0c\u4e8c\u7b49\u5ea7 \u00a597\uff08\u53c2\u8003\u4ef7\u00b7\u67e5\u8be2\u65e5 2026-08-05\uff09\uff0c\u56fd\u5e86\u5efa\u8bae\u63d0\u524d 1-2 \u5468\u8ba2\u7968"}, "time": "09:53", "type": "else"}, {"duration_display": "40 \u5206\u949f", "duration_min": 40, "poi": {"category": "\u9ad8\u94c1\u7ad9", "coord_status": "unverified", "lat": 23.4665, "lng": 116.622, "name": "\u6f6e\u6c55\u7ad9", "open_hours": "\u2014", "recommend_reason": "\u51fa\u7ad9\u4e58\u516c\u4ea4/\u6253\u8f66\u8fdb\u6c55\u5934\u5e02\u533a\uff0c\u7ea6 40min"}, "time": "11:13", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u4f4f\u5bbf", "coord_status": "unverified", "lat": 23.3547, "lng": 116.678, "name": "\u5165\u4f4f\u00b7\u6c55\u5934\u5c0f\u516c\u56ed/\u9f99\u773c\u5357", "open_hours": "\u2014", "recommend_reason": "\u653e\u884c\u674e\u7a0d\u4f5c\u4f11\u6574\uff0c\u63a8\u8350\u4f4f\u5c0f\u516c\u56ed/\u9f99\u773c\u5357\uff0c\u5403\u559d\u6b65\u884c\u53ef\u8fbe"}, "time": "13:30", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u5386\u53f2\u8857\u533a", "coord_status": "unverified", "lat": 23.3547, "lng": 116.678, "name": "\u5c0f\u516c\u56ed\u9a91\u697c\u7fa4", "open_hours": "\u5168\u5929", "recommend_reason": "\u5357\u6d0b\u9a91\u697c\u5efa\u7b51\uff0c\u508d\u665a\u4eba\u5c11\u51fa\u7247\uff1b\u4e3b\u8857\u53ea\u62cd\u7167\u4e0d\u6d88\u8d39", "ticket_price": "\u514d\u8d39"}, "time": "15:00", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u516c\u56ed", "coord_status": "unverified", "lat": 23.34, "lng": 116.675, "name": "\u897f\u5824\u516c\u56ed", "open_hours": "\u5168\u5929", "recommend_reason": "\u770b\u7910\u77f3\u5927\u6865\u65e5\u843d\uff0c\u514d\u8d39\uff0c\u6d77\u8fb9\u5439\u98ce\u63a7\u4eba\u6d41", "ticket_price": "\u514d\u8d39"}, "time": "17:30", "type": "evening"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.359, "lng": 116.66, "name": "\u674f\u82b1\u5434\u8bb0\u725b\u8089\u706b\u9505", "open_hours": "\u7ea6 11:00-22:00\uff08\u4ee5\u5e97\u4e3a\u51c6\uff09", "recommend_reason": "\u6c55\u5934\u725b\u8089\u706b\u9505\u6807\u6746\uff0c\u73b0\u5207\u540a\u9f99/\u4e94\u82b1\u8dbe\uff0c11 \u70b9\u524d\u5230\u4e0d\u6392\u961f\uff1b\u660e\u7801\u6807\u4ef7", "ticket_price": "\u4eba\u5747 \u00a580"}, "time": "19:00", "type": "dinner"}], "theme": "\u53a6\u95e8\u2192\u6c55\u5934 \u00b7 \u8001\u57ce\u6162\u901b + \u725b\u8089\u706b\u9505\uff08\u8f7b\u677e\uff0c\u4f4f\u6c55\u5934\uff09", "total_distance_km": 320, "weather": {"summary": "10 \u6708\u521d\u7ca4\u4e1c\u708e\u70ed\u591a\u96e8\uff0c\u7ea6 28-33\u2103"}}, {"daily_budget": 430, "date": "2026-10-05 \u5468\u4e00", "day_index": 2, "fatigue_index": 0.35, "routes": [{"description": "\u9152\u5e97 \u2192 \u9f99\u773c\u5357\u8def\uff08\u6b65\u884c/\u5171\u4eab\u5355\u8f66\uff09", "from": 0, "to": 1}, {"description": "\u9f99\u773c\u5357 \u2192 \u98d8\u9999\u5c0f\u98df\u5e97\uff08\u56fd\u5e73\u8def\uff09", "from": 1, "to": 2}, {"description": "\u8001\u57ce \u2192 \u5988\u5c7f\u5c9b\uff08\u6253\u8f66/\u516c\u4ea4\u8fc7\u6d77\u6e7e\u5927\u6865\uff09", "from": 2, "to": 3}, {"description": "\u5988\u5c7f\u5c9b \u2192 \u4e1c\u6d77\u5cb8/\u77f3\u70ae\u53f0\u516c\u56ed", "from": 3, "to": 4}, {"description": "\u4e1c\u6d77\u5cb8 \u2192 \u5bcc\u82d1\u996e\u98df\uff08\u957f\u5e73\u8def\uff0c\u6253\u8f66\uff09", "from": 4, "to": 5}], "stops": [{"duration_display": "30 \u5206\u949f", "duration_min": 30, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.345, "lng": 116.69, "name": "\u5c0f\u5434\u80a0\u7c89\uff08\u9f99\u773c\u5357\uff09", "open_hours": "\u7ea6 7:00-12:00", "recommend_reason": "\u76ae\u8584\u9985\u5927\u3001\u9171\u6c41\u9c9c\u751c\uff0c\u672c\u5730\u4eba\u6392\u961f\uff0c\u51e0\u4e4e\u65e0\u6e38\u5ba2", "ticket_price": "\u00a56"}, "time": "08:00", "type": "breakfast"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u7f8e\u98df\u8857", "coord_status": "unverified", "lat": 23.345, "lng": 116.69, "name": "\u9f99\u773c\u5357\u8def\u7f8e\u98df\u8857", "open_hours": "\u5168\u5929", "recommend_reason": "\u7518\u8349\u6c34\u679c/\u5e7f\u573a\u8c46\u82b1/\u7cbf\u54c1\u4e00\u6761\u8857\uff0c\u672c\u5730\u4eba\u79c1\u85cf", "ticket_price": "\u514d\u8d39"}, "time": "09:30", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.355, "lng": 116.679, "name": "\u98d8\u9999\u5c0f\u98df\u5e97\uff08\u56fd\u5e73\u8def\uff09", "open_hours": "\u7ea6 9:00-18:00", "recommend_reason": "\u869d\u70d9+\u7cbf\u54c1\u62fc\u76d8 \u00a530\uff0c\u4e8c\u697c\u6709\u7a7a\u8c03\u4f4d", "ticket_price": "\u4eba\u5747 \u00a530"}, "time": "11:00", "type": "lunch"}, {"duration_display": "120 \u5206\u949f", "duration_min": 120, "poi": {"category": "\u6d77\u5c9b", "coord_status": "unverified", "lat": 23.33, "lng": 116.73, "name": "\u5988\u5c7f\u5c9b", "open_hours": "\u5168\u5929", "recommend_reason": "\u514d\u8d39\u5c0f\u5c9b\uff0c\u508d\u665a\u6e14\u8239\u5f52\u6e2f\u4eba\u5c11\uff0c\u6d77\u8fb9\u53d1\u5446\u6700\u653e\u677e", "ticket_price": "\u514d\u8d39"}, "time": "14:00", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u516c\u56ed", "coord_status": "unverified", "lat": 23.34, "lng": 116.7, "name": "\u4e1c\u6d77\u5cb8 / \u77f3\u70ae\u53f0\u516c\u56ed", "open_hours": "\u5168\u5929", "recommend_reason": "\u770b\u6d77\u5439\u98ce\uff0c\u907f\u5f00\u65e5\u95f4\u4eba\u6d41\uff0c\u508d\u665a\u5149\u7ebf\u597d", "ticket_price": "\u514d\u8d39"}, "time": "17:00", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.35, "lng": 116.71, "name": "\u5bcc\u82d1\u996e\u98df\uff08\u957f\u5e73\u8def\uff09", "open_hours": "18:00-\u51cc\u6668", "recommend_reason": "\u6f6e\u6c55\u0027\u6df1\u591c\u98df\u5802\u0027\uff0c\u5364\u6c34+\u751f\u814c+\u9c7c\u996d+\u767d\u7ca5\uff0c\u660e\u7801\u6807\u4ef7\u4e0d\u5bb0\u5ba2", "ticket_price": "\u4eba\u5747 \u00a560"}, "time": "19:00", "type": "dinner"}], "theme": "\u6c55\u5934\u7f8e\u98df\u626b\u8857 + \u5988\u5c7f\u5c9b\u53d1\u5446\uff08\u8f7b\u677e\uff0c\u4f4f\u6c55\u5934\uff09", "total_distance_km": 40, "weather": {"summary": "\u708e\u70ed\uff0c\u6ce8\u610f\u9632\u6652\u8865\u6c34"}}, {"daily_budget": 380, "date": "2026-10-06 \u5468\u4e8c", "day_index": 3, "fatigue_index": 0.5, "routes": [{"description": "\u6c55\u5934 \u2192 \u6f6e\u5dde\uff08\u987a\u98ce\u8f66/\u6253\u8f66\u7ea6 1h\uff0c\u6216\u6f6e\u6c55\u7ad9\u9ad8\u94c1 15min\uff09", "from": 0, "to": 1}, {"description": "\u5e7f\u6d4e\u6865 \u2192 \u5f00\u5143\u5bfa\uff08\u6cbf\u73af\u57ce\u4e1c\u8def\u6b65\u884c\uff09", "from": 1, "to": 2}, {"description": "\u5f00\u5143\u5bfa \u2192 \u897f\u9a6c\u8def\u5348\u9910\uff08\u6b65\u884c\u8fdb\u53e4\u57ce\u5c0f\u5df7\uff09", "from": 2, "to": 3}, {"description": "\u897f\u9a6c\u8def \u2192 \u7532\u7b2c\u5df7/\u5df1\u7565\u9ec4\u516c\u7960\uff08\u53e4\u57ce\u5185\u6b65\u884c\uff09", "from": 3, "to": 4}, {"description": "\u53e4\u57ce\u533a \u2192 \u5e7f\u6d4e\u6865\uff08\u770b\u62c6\u6865+\u706f\u5149\u79c0\uff09", "from": 4, "to": 5}, {"description": "\u5e7f\u6d4e\u6865 \u2192 \u724c\u574a\u8857\u591c\u666f\uff08\u6b65\u884c\uff09", "from": 5, "to": 6}], "stops": [{"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u4ea4\u901a", "coord_status": "unverified", "lat": 23.661, "lng": 116.63, "name": "\u6c55\u5934 \u2192 \u6f6e\u5dde", "open_hours": "\u2014", "recommend_reason": "\u6c55\u5934\u6253\u8f66/\u987a\u98ce\u8f66\u7ea6 1h\uff1b\u6216\u5230\u6f6e\u6c55\u7ad9\u4e58\u9ad8\u94c1 15min", "ticket_price": "\u987a\u98ce\u8f66 \u00a550/\u4eba"}, "time": "08:00", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u53e4\u6865", "coord_status": "unverified", "lat": 23.665, "lng": 116.635, "name": "\u5e7f\u6d4e\u6865", "open_hours": "8:30-17:30", "recommend_reason": "\u4e2d\u56fd\u56db\u5927\u53e4\u6865\uff0c\u6e05\u6668\u4eba\u5c11\u72ec\u4eab\u6865\u9762\uff1b17:30 \u770b\u0027\u8fc7\u6cb3\u62c6\u6865\u0027\u5947\u89c2", "ticket_price": "\u00a520"}, "time": "09:30", "type": "else"}, {"duration_display": "50 \u5206\u949f", "duration_min": 50, "poi": {"category": "\u53e4\u5239", "coord_status": "unverified", "lat": 23.662, "lng": 116.628, "name": "\u5f00\u5143\u5bfa", "open_hours": "6:30-17:00", "recommend_reason": "1200 \u5e74\u53e4\u5239\uff0c\u7ea2\u5899\u5d4c\u74f7\uff0c\u514d\u8d39\u7eb3\u51c9", "ticket_price": "\u514d\u8d39"}, "time": "11:00", "type": "else"}, {"duration_display": "75 \u5206\u949f", "duration_min": 75, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.664, "lng": 116.626, "name": "\u897f\u9a6c\u8def\u672c\u5730\u9986\u5b50\uff08\u9547\u8bb0\u725b\u6742/\u8001\u5f6c\u869d\u70d9/\u80e1\u8363\u6cc9\uff09", "open_hours": "\u5168\u5929", "recommend_reason": "\u907f\u5f00\u724c\u574a\u8857\u4e3b\u8857\uff0c\u5df7\u5b50\u91cc\u5e73\u4ef7\u5730\u9053\uff1a\u725b\u6742\u7cbf\u6761\u00a525/\u869d\u70d9\u00a520/\u9e2d\u6bcd\u637b\u00a510", "ticket_price": "\u4eba\u5747 \u00a540"}, "time": "12:00", "type": "lunch"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u53e4\u6c11\u5c45", "coord_status": "unverified", "lat": 23.663, "lng": 116.627, "name": "\u7532\u7b2c\u5df7 / \u5df1\u7565\u9ec4\u516c\u7960", "open_hours": "\u7ea6 8:30-17:30", "recommend_reason": "\u53e4\u6c11\u5c45\u6728\u96d5\u7cbe\u81f4\u51e0\u4e4e\u65e0\u65c5\u884c\u56e2\uff1b\u8054\u7968\u542b\u5e7f\u6d4e\u6865+\u5317\u9601+\u5df1\u7565+\u8bb8\u9a78\u9a6c\u5e9c", "ticket_price": "\u8054\u7968 \u00a542"}, "time": "14:30", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u591c\u666f", "coord_status": "unverified", "lat": 23.665, "lng": 116.635, "name": "\u5e7f\u6d4e\u6865\u62c6\u6865 + \u706f\u5149\u79c0", "open_hours": "20:00 / 21:30 \u573a", "recommend_reason": "17:30 \u6d6e\u6865\u62c6\u89e3\u5947\u89c2\uff1b20:00 \u706f\u5149\u79c0\uff0c\u4e0a\u6c34\u95e8\u57ce\u697c\u89c2\u666f\u4eba\u5c11", "ticket_price": "\u514d\u8d39\u89c2\u666f"}, "time": "17:30", "type": "evening"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u6b65\u884c\u8857", "coord_status": "unverified", "lat": 23.661, "lng": 116.63, "name": "\u724c\u574a\u8857\u591c\u666f", "open_hours": "\u5168\u5929 24h", "recommend_reason": "23 \u5ea7\u724c\u574a\u7ea2\u706f\u7b3c\uff0c\u65c5\u884c\u56e2\u5df2\u79bb\u573a\uff0c\u8fb9\u8d70\u8fb9\u5403\u4e0d\u6324", "ticket_price": "\u514d\u8d39"}, "time": "19:30", "type": "evening"}], "theme": "\u6f6e\u5dde\u53e4\u57ce\u4e00\u65e5\uff08\u9519\u5cf0\uff1a\u6e05\u6668\u5e7f\u6d4e\u6865 + \u591c\u724c\u574a\u8857\uff0c\u4f4f\u6f6e\u5dde\uff09", "total_distance_km": 60, "weather": {"summary": "\u708e\u70ed\uff0c\u53e4\u57ce\u5185\u591a\u6b65\u884c"}}, {"daily_budget": 430, "date": "2026-10-07 \u5468\u4e09", "day_index": 4, "fatigue_index": 0.55, "routes": [{"description": "\u6f6e\u5dde/\u6c55\u5934 \u2192 \u5357\u6fb3\uff08161 \u8def\u516c\u4ea4\u00a512-15 \u6216 \u6e05\u6668\u6253\u8f66\u8fc7\u5357\u6fb3\u5927\u6865\uff09", "from": 0, "to": 1}, {"description": "\u957f\u5c71\u5c3e\u706f\u5854 \u2192 \u9006\u65f6\u9488\u73af\u5c9b\uff08\u4e91\u6fb3\u2192\u4e09\u56f1\u5d16\u2192\u5317\u56de\u5f52\u7ebf\u81ea\u7136\u4e4b\u95e8\uff09", "from": 1, "to": 2}, {"description": "\u73af\u5c9b\u516c\u8def \u2192 \u9752\u6fb3\u6e7e\u6c99\u6ee9", "from": 2, "to": 3}, {"description": "\u9752\u6fb3\u6e7e \u2192 \u540e\u5b85\u9547\u6d77\u9c9c\u665a\u9910", "from": 3, "to": 4}, {"description": "\u540e\u5b85\u9547\u5165\u4f4f", "from": 4, "to": 5}], "stops": [{"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u4ea4\u901a", "coord_status": "unverified", "lat": 23.42, "lng": 116.97, "name": "\u6f6e\u5dde/\u6c55\u5934 \u2192 \u5357\u6fb3\u5c9b", "open_hours": "\u2014", "recommend_reason": "\u516c\u4ea4 161 \u8def\u7ea6 1h\uff1b\u6216\u6e05\u6668 7 \u70b9\u524d\u8fc7\u5357\u6fb3\u5927\u6865\u907f\u5835\uff08\u8282\u5047\u65e5\u9700\u0027\u5357\u6fb3\u7545\u884c\u0027\u9884\u7ea6\uff09", "ticket_price": "\u516c\u4ea4\u00a512-15 / \u6253\u8f66\u00a5130"}, "time": "08:00", "type": "else"}, {"duration_display": "45 \u5206\u949f", "duration_min": 45, "poi": {"category": "\u706f\u5854", "coord_status": "unverified", "lat": 23.41, "lng": 116.52, "name": "\u957f\u5c71\u5c3e\u706f\u5854", "open_hours": "\u5168\u5929", "recommend_reason": "\u8fdb\u5c9b\u9996\u5730\u6807\uff0c\u7ea2\u767d\u706f\u5854+\u5357\u6fb3\u5927\u6865\uff0c\u65e5\u843d\u7edd\u7f8e", "ticket_price": "\u514d\u8d39"}, "time": "10:00", "type": "else"}, {"duration_display": "150 \u5206\u949f", "duration_min": 150, "poi": {"category": "\u6d77\u5cb8\u516c\u8def", "coord_status": "unverified", "lat": 23.422, "lng": 117.03, "name": "\u73af\u5c9b\u516c\u8def\uff08\u9006\u65f6\u9488\uff09", "open_hours": "\u5168\u5929", "recommend_reason": "\u9006\u65f6\u9488\u907f\u4e3b\u5e72\u9053\u8f66\u6d41\uff1a\u4e91\u6fb3\u6e14\u6e2f\u2192\u4e09\u56f1\u5d16\u706f\u5854\u2192\u5317\u56de\u5f52\u7ebf\u81ea\u7136\u4e4b\u95e8", "ticket_price": "\u514d\u8d39\uff08\u7535\u52a8\u8f66\u00a550-80/\u5929\uff09"}, "time": "11:00", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u6d77\u6ee9", "coord_status": "unverified", "lat": 23.42, "lng": 117.02, "name": "\u9752\u6fb3\u6e7e\u6c99\u6ee9", "open_hours": "\u5168\u5929", "recommend_reason": "\u0027\u4e1c\u65b9\u590f\u5a01\u5937\u0027\u7ec6\u8f6f\u6c99\u6ee9\uff0c\u514d\u8d39\u770b\u6d77\u53d1\u5446", "ticket_price": "\u514d\u8d39"}, "time": "14:00", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.41, "lng": 116.98, "name": "\u540e\u5b85\u9547\u6d77\u9c9c\uff08\u5e02\u573a\u81ea\u8d2d\u52a0\u5de5/\u8bb8\u5927\u59d0\u7684\u83dc\uff09", "open_hours": "\u7ea6 10:00-21:00", "recommend_reason": "\u540e\u5b85\u5e02\u573a\u82b1\u87f9\u00a525/\u65a4\u3001\u76ae\u76ae\u867e\u00a530/\u65a4\u81ea\u8d2d\u52a0\u5de5\u00a510-20\uff1b\u6216\u4e91\u6fb3\u8bb8\u5927\u59d0\u7684\u83dc\u4eba\u5747\u00a560", "ticket_price": "\u4eba\u5747 \u00a560"}, "time": "17:00", "type": "dinner"}, {"duration_display": "0 \u5206\u949f", "duration_min": 0, "poi": {"category": "\u4f4f\u5bbf", "coord_status": "unverified", "lat": 23.42, "lng": 116.97, "name": "\u591c\u5bbf\u540e\u5b85\u9547", "open_hours": "\u2014", "recommend_reason": "\u6c11\u5bbf\u6bd4\u9752\u6fb3\u6e7e\u4fbf\u5b9c\u4e00\u534a\u4e14\u4eba\u5c11\uff0c\u73af\u5c9b\u8d77\u70b9", "ticket_price": "\u00a5150-250/\u665a"}, "time": "19:30", "type": "else"}], "theme": "\u6f6e\u5dde\u2192\u5357\u6fb3\u5c9b\u73af\u5c9b\uff08\u4f4f\u540e\u5b85\u9547\uff0c\u8f7b\u677e\u6d77\u5c9b\uff09", "total_distance_km": 90, "weather": {"summary": "\u6d77\u5c9b\u98ce\u5927\uff0c\u5907\u5916\u5957\u4e0e\u9632\u6652"}}, {"daily_budget": 260, "date": "2026-10-08 \u5468\u56db\uff08\u8865\u73ed/\u8bf7\u5047\u65e5\uff09", "day_index": 5, "fatigue_index": 0.3, "routes": [{"description": "\u9752\u6fb3\u6e7e\u65e5\u51fa \u2192 \u79bb\u5c9b\u56de\u6c55\u5934/\u6f6e\u6c55\u7ad9\uff0810/8 \u975e\u5047\u671f\u7545\u901a\uff09", "from": 0, "to": 1}, {"description": "\u6f6e\u6c55\u7ad9\u5468\u8fb9 \u2192 \u798f\u5408\u57d5\u5348\u9910", "from": 1, "to": 2}, {"description": "\u798f\u5408\u57d5 \u2192 \u6f6e\u6c55\u7ad9\u4e58\u9ad8\u94c1\u8fd4\u53a6\u95e8\u5317", "from": 2, "to": 3}, {"description": "\u9ad8\u94c1 \u2192 \u53a6\u95e8\u5317\uff0c\u65c5\u7a0b\u7ed3\u675f", "from": 3, "to": 4}], "stops": [{"duration_display": "45 \u5206\u949f", "duration_min": 45, "poi": {"category": "\u6d77\u6ee9", "coord_status": "unverified", "lat": 23.42, "lng": 117.02, "name": "\u9752\u6fb3\u6e7e\u65e5\u51fa\uff08\u53ef\u9009\uff09", "open_hours": "\u65e5\u51fa\u7ea6 6:00", "recommend_reason": "\u65e9\u8d77\u770b\u6d77\u4e0a\u65e5\u51fa\uff0c10/8 \u975e\u5047\u671f\u4eba\u6781\u5c11", "ticket_price": "\u514d\u8d39"}, "time": "06:30", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u4ea4\u901a", "coord_status": "unverified", "lat": 23.42, "lng": 116.97, "name": "\u79bb\u5c9b \u2192 \u6c55\u5934/\u6f6e\u6c55\u7ad9", "open_hours": "\u2014", "recommend_reason": "10/8 \u975e\u5047\u671f\uff0c\u5357\u6fb3\u5927\u6865\u7545\u901a\uff1b\u516c\u4ea4/\u6253\u8f66\u56de\u6f6e\u6c55\u7ad9", "ticket_price": "\u516c\u4ea4\u00a512-15 / \u6253\u8f66\u00a5130"}, "time": "09:00", "type": "else"}, {"duration_display": "45 \u5206\u949f", "duration_min": 45, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 23.3547, "lng": 116.678, "name": "\u798f\u5408\u57d5\u725b\u8089\u4e38\u7cbf\u6761\u6c64\uff08\u6536\u5c3e\uff09", "open_hours": "\u7ea6 8:00-20:00", "recommend_reason": "\u624b\u6253\u725b\u8089\u4e38+\u7cbf\u6761\u6c64\u00a530\uff0c\u4e3a\u65c5\u7a0b\u6536\u4e2a\u9c9c", "ticket_price": "\u4eba\u5747 \u00a530"}, "time": "11:30", "type": "lunch"}, {"duration_display": "80 \u5206\u949f", "duration_min": 80, "poi": {"category": "\u9ad8\u94c1", "coord_status": "unverified", "lat": 23.4665, "lng": 116.622, "name": "\u6f6e\u6c55\u7ad9 \u2192 \u53a6\u95e8\u5317\uff08\u9ad8\u94c1\uff09", "open_hours": "\u2014", "recommend_reason": "G3019 \u7b49\u8f66\u6b21\u7ea6 1h15m\uff1b10/8 \u8fd4\u7a0b\u4eba\u6d41\u6781\u4f4e\u597d\u4e70\u7968", "ticket_price": "\u4e8c\u7b49\u5ea7 \u00a593-99"}, "time": "13:30", "type": "else"}, {"duration_display": "0 \u5206\u949f", "duration_min": 0, "poi": {"category": "\u9ad8\u94c1\u7ad9", "coord_status": "unverified", "lat": 24.635, "lng": 118.073, "name": "\u62b5\u8fbe\u53a6\u95e8\u5317", "open_hours": "\u2014", "recommend_reason": "\u65c5\u7a0b\u5706\u6ee1\u7ed3\u675f", "ticket_price": ""}, "time": "15:00", "type": "else"}], "theme": "\u5357\u6fb3\u2192\u53a6\u95e8\u8fd4\u7a0b\uff08\u9519\u5cf0\u56de\uff0c\u4eba\u6700\u5c11\uff09", "total_distance_km": 320, "weather": {"summary": "\u8fd4\u7a0b\u65e5\uff0c\u5357\u6fb3\u5927\u6865\u7545\u901a"}}];
+
+  days.forEach((day, idx) => {
+    const color = dayColors[idx % dayColors.length];
+
+    // === 路线绘制 ===
+    // 优先使用 day.routes[].geometry（真实道路 polyline）
+    // 拿不到时退到 day.routes[].description（路径文字版，画虚线）
+    // 都没有时退到直接连点（虚线 + 红字提示）
+    const routes = day.routes || [];
+    if (routes.length > 0) {
+      routes.forEach(r => {
+        if (r.geometry && r.geometry.length >= 2) {
+          // 真实路线（lng,lat → lat,lng for Leaflet）
+          const latlngs = r.geometry.map(p => [p[1], p[0]]);
+          L.polyline(latlngs, {
+            color, weight: 5, opacity: 0.85
+          }).addTo(map).bindTooltip(`D${day.day_index} 路段 ${r.from}→${r.to} · 实际道路`, {sticky: true});
+        } else if (r.source === "straight_line_unavailable" || !r.geometry) {
+          // 兜底：直线 + 虚线 + 红字提示
+          const stopFrom = day.stops[r.from], stopTo = day.stops[r.to];
+          if (stopFrom && stopTo && stopFrom.poi.lat && stopTo.poi.lat) {
+            L.polyline([
+              [stopFrom.poi.lat, stopFrom.poi.lng],
+              [stopTo.poi.lat,   stopTo.poi.lng]
+            ], {
+              color: '#999', weight: 3, opacity: 0.6, dashArray: '8,8'
+            }).addTo(map).bindTooltip(
+              `⚠️ D${day.day_index} 路段 ${r.from}→${r.to} 实际路线未获取`,
+              {sticky: true}
+            );
+          }
+        }
+      });
+    } else {
+      // 完全没 routes 字段时，老兼容：按 stops 顺序连虚线
+      const dayLatLngs = day.stops.map(s => [s.poi.lat, s.poi.lng])
+                                  .filter(p => p[0] && p[1]);
+      if (dayLatLngs.length >= 2) {
+        L.polyline(dayLatLngs, {
+          color: '#999', weight: 3, opacity: 0.6, dashArray: '8,8'
+        }).addTo(map).bindTooltip(
+          `⚠️ D${day.day_index} 实际路线数据缺失（agent 未生成 routes 字段）`,
+          {sticky: true}
+        );
+      }
+    }
+
+    // === Marker 绘制 ===
+    day.stops.forEach((s, i) => {
+      if (!s.poi.lat || !s.poi.lng) return;
+      const isUnverified = s.poi.coord_status === "unverified";
+      const icon = L.divIcon({
+        className: 'day-marker',
+        html: `<div style="background:${color};color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;border:${isUnverified?'2px dashed #fff':'2px solid #fff'};box-shadow:0 1px 4px rgba(0,0,0,0.3);">D${day.day_index}·${i+1}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+      const m = L.marker([s.poi.lat, s.poi.lng], { icon }).addTo(map);
+      const verifyTag = isUnverified ? '<br><span style="color:#e67e22;">⚠️ 坐标待校验</span>' : '';
+      m.bindPopup(`<b>D${day.day_index} 第 ${i+1} 站 · ${s.poi.name}</b><br>🕐 ${s.time}<br>${s.poi.category||''}${verifyTag}`);
+      allLatLngs.push([s.poi.lat, s.poi.lng]);
+    });
+  });
+
+  // === 路线图例 ===
+  const legend = L.control({position: 'bottomleft'});
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div', 'map-legend');
+    div.innerHTML = `
+      <div style="background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.6;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+        <div><span style="display:inline-block;width:24px;height:3px;background:#3498db;vertical-align:middle;"></span> 实际道路路线</div>
+        <div><span style="display:inline-block;width:24px;height:3px;background:#999;border-top:1px dashed #999;vertical-align:middle;"></span> 实际路线未获取（直线示意）</div>
+      </div>`;
+    return div;
+  };
+  legend.addTo(map);
+  if (allLatLngs.length === 1) {
+    map.setView(allLatLngs[0], 13);
+  } else if (allLatLngs.length > 1) {
+    map.fitBounds(allLatLngs, { padding: [60, 60], maxZoom: 14 });
+  } else {
+    map.setView([35, 105], 5);
+  }
+
+  // 预算饼图
+  const ctx = document.getElementById('budget-pie');
+  if (ctx) {
+    const bd = {"accommodation": 1120, "buffer": 300, "food": 800, "ticket": 110, "transport_intra": 300, "transport_long": 194};
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['大交通','住宿','餐饮','门票','市内交通','备用'],
+        datasets: [{
+          data: [bd.transport_long, bd.accommodation, bd.food, bd.ticket, bd.transport_intra, bd.buffer],
+          backgroundColor: ['#3498db','#9b59b6','#e74c3c','#f39c12','#1abc9c','#95a5a6'],
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+</script>
+</body>
+</html>
