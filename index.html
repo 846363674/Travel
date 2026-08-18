@@ -501,17 +501,22 @@ body {
 // 若以 GitHub Pages 的 /docs 目录发布，请把 index.html 放进 docs/，并将此项改为 ''
 const DOCS_PREFIX = 'docs/';
 
+// 文件清单：由 GitHub Actions 在每次推送 docs/ 后自动生成，
+// 纯静态文件（无 API 限频），作为自动发现的主路径。
+const MANIFEST_PATH = 'manifest.json';
+
 // 手动指定 GitHub 仓库（可选）：当页面无法从 URL 推断仓库时使用，
 // 例如直接用 file:// 双击打开 index.html 的本地预览。留空则仅靠 URL 推断。
 const GITHUB_REPO = '846363674/Travel';
 
 // 按文件名登记可选元数据（title 留空则自动从文件名推断）
 const GUIDE_META = {
-  '温州-雁荡山.html': { title: '温州 · 雁荡山', tag: '浙江 · 山岳', subtitle: '2026-09-25 行程书 · 含地图与预算' }
+  '温州-雁荡山.html': { title: '温州 · 雁荡山', tag: '浙江 · 山岳', subtitle: '2026-09-25 行程书 · 含地图与预算' },
+  '潮汕-2026-10-04-行程书.html': { title: '潮汕 · 行程书', tag: '广东 · 海滨', subtitle: '2026-10-04 行程书' }
 };
 
-// 静态兜底文件名列表
-const GUIDE_FALLBACK = ['温州-雁荡山.html'];
+// 静态兜底文件名列表（仅当清单与 API 都不可用时使用）
+const GUIDE_FALLBACK = ['温州-雁荡山.html', '潮汕-2026-10-04-行程书.html'];
 
 /* ==========================================================
    2. DOM 引用与状态
@@ -630,7 +635,7 @@ function applySearch() {
    本地打开 / 私有仓库 / 断网时自动降级到静态兜底列表。
    ========================================================== */
 const CACHE_KEY = 'travel-guides-cache-v1';
-const CACHE_TTL = 10 * 60 * 1000;   // 缓存 10 分钟，兜底用
+const CACHE_TTL = 30 * 60 * 1000;   // 缓存 30 分钟，兜底用
 
 // 从 GitHub Pages 域名推断仓库：https://OWNER.github.io/REPO/...
 function repoBase() {
@@ -675,6 +680,17 @@ function manualRepoBase() {
   return { owner: seg[0], repo: seg[1] };
 }
 
+// 首选：读取自动生成的 manifest.json（GitHub Pages 静态文件，无 API 限频）
+async function discoverManifest() {
+  const res = await fetch(MANIFEST_PATH, { cache: 'no-store' });
+  if (!res.ok) throw new Error('no manifest');
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error('bad manifest');
+  const names = data.filter((n) => typeof n === 'string' && /\.html?$/i.test(n));
+  if (names.length) { writeCache(names); return names; }
+  throw new Error('empty manifest');
+}
+
 // 通过 GitHub API 拉取 docs/ 目录文件名（公开仓库无需鉴权）
 async function tryApi() {
   const base = repoBase() || manualRepoBase();
@@ -696,24 +712,30 @@ async function tryApi() {
 }
 
 async function discoverGuides() {
-  // 在 GitHub Pages 上时，本地目录列表不可用（返回 404），直接走 API
+  // 本地优先：解析静态服务器的目录列表（反映磁盘最新状态，含尚未提交的文件）
   if (!repoBase()) {
-    // 本地优先：解析静态服务器的目录列表（反映磁盘最新状态，含尚未提交的文件）
     try { return await discoverLocally(); } catch (e) {}
   }
 
-  // GitHub API：GitHub Pages 线上，或本地手动指定仓库（如 file:// 打开时）
+  // 首选 manifest.json：GitHub Actions 每次推送 docs/ 后自动生成，无 API 限频
+  try { return await discoverManifest(); } catch (e) {}
+
+  // 其次 GitHub API：作为 manifest 缺失 / 无法获取时的兜底
   const apiNames = await tryApi();
   if (apiNames) return apiNames;
 
-  // 兜底：缓存或静态列表
+  // 最后兜底：缓存或静态列表
   const cached = readCache();
   if (cached && cached.length) return cached;
   return GUIDE_FALLBACK.slice();
 }
 
 // 重新发现：仅在结果发生变化时才重建卡片，避免无谓的刷新闪烁
+let lastRefresh = 0;
 function refreshGuides() {
+  const now = Date.now();
+  if (now - lastRefresh < 5000) return;   // 5 秒内不重复刷新，防止高频请求
+  lastRefresh = now;
   discoverGuides().then((names) => {
     const next = names.map(makeEntry);
     const same = next.length === guideList.length &&

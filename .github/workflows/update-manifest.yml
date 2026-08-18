@@ -1,0 +1,38 @@
+# 每次向 docs/ 推送新攻略后，自动重新生成 manifest.json（文件清单）。
+# index.html 读取该静态清单即可展示全部攻略，无需调用有频率限制的 GitHub API。
+name: Update docs manifest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+permissions:
+  contents: write
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate manifest.json
+        run: |
+          python3 - <<'EOF'
+          import json, glob, os
+          names = sorted(os.path.basename(f) for f in glob.glob('docs/*.html'))
+          with open('manifest.json', 'w', encoding='utf-8') as fp:
+              json.dump(names, fp, ensure_ascii=False, indent=2)
+          print('manifest.json:', names)
+          EOF
+
+      - name: Commit manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update docs manifest [skip ci]"
+          git push
