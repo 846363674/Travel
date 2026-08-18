@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>雁荡山 · 2026-09-25 行程书</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* 出游规划师 · HTML 行程书样式 · v1.0 */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.55;
+}
+header.cover {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  padding: 60px 40px 40px;
+}
+header.cover h1 { margin: 0 0 12px; font-size: 32px; font-weight: 700; }
+header.cover .sub { font-size: 16px; opacity: 0.85; }
+.confidence-summary {
+  margin-top: 16px; font-size: 13px; opacity: 0.9;
+}
+.confidence-summary .dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin: 0 4px 0 12px; vertical-align: middle;
+}
+.dot-green  { background: #2ecc71; }
+.dot-yellow { background: #f1c40f; }
+.dot-gray   { background: #95a5a6; }
+.meta-stamp { margin-top: 8px; font-size: 12px; opacity: 0.6; }
+
+section {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+section h2 {
+  font-size: 22px; margin: 32px 0 16px; padding-left: 12px;
+  border-left: 4px solid #3498db;
+}
+
+/* 总览地图 */
+#map {
+  width: 100%; height: 480px; border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* 大交通 */
+.transport-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.transport-section .intra-tip {
+  grid-column: 1 / -1; background: #f0f4f8; padding: 16px; border-radius: 8px;
+}
+.dir-block h4 { margin: 0 0 12px; }
+.trans-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 12px; position: relative;
+}
+.trans-mode { font-weight: 700; font-size: 18px; color: #3498db; }
+.trans-route { font-size: 15px; margin: 4px 0; }
+.trans-time { color: #555; font-size: 14px; }
+.trans-price { font-weight: 600; color: #e74c3c; margin-top: 6px; }
+.book-links {
+  margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e0e0e0;
+  font-size: 13px; color: #555;
+}
+.book-links .book-label { color: #888; margin-right: 6px; }
+.book-links a {
+  display: inline-block; margin-right: 10px; color: #3498db;
+  text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent;
+}
+.book-links a:hover { border-bottom-color: #3498db; }
+
+/* 小红书笔记区 */
+.xhs-section { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+.xhs-intro { color: #666; font-size: 14px; margin: 0 0 20px; }
+.xhs-group { margin-bottom: 24px; }
+.xhs-group h4 { margin: 0 0 12px; font-size: 16px; }
+.xhs-count { color: #999; font-size: 13px; font-weight: 400; margin-left: 6px; }
+.xhs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.xhs-card {
+  display: block; text-decoration: none; color: inherit;
+  background: #fafafa; border-radius: 10px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid #eee;
+}
+.xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.xhs-cover {
+  width: 100%; padding-top: 75%; background-size: cover; background-position: center;
+  background-color: #ddd;
+}
+.xhs-body { padding: 12px; }
+.xhs-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.xhs-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+.xhs-meta span { margin-right: 10px; }
+.xhs-snippet { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 8px; }
+.xhs-sentiment {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+}
+.xhs-sentiment-positive { background: #e8f5e9; color: #2e7d32; }
+.xhs-sentiment-negative { background: #ffebee; color: #c62828; }
+.xhs-sentiment-neutral  { background: #f0f0f0; color: #555; }
+.xhs-disclaimer { color: #999; font-size: 12px; margin-top: 16px; text-align: center; }
+
+/* 住宿 */
+.hotel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.hotel-card {
+  background: #fff; border-radius: 10px; padding: 18px; position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.hotel-card .h-rank {
+  position: absolute; top: 12px; right: 14px; font-weight: 700; color: #f39c12;
+}
+.h-price { color: #e74c3c; font-weight: 600; margin: 6px 0; }
+.h-rating, .h-loc { font-size: 13px; color: #555; }
+.h-amenities { margin: 8px 0 0; }
+.tag {
+  display: inline-block; background: #ecf0f1; color: #555;
+  border-radius: 4px; padding: 2px 8px; margin: 2px 4px 0 0; font-size: 12px;
+}
+.warning { color: #e67e22; font-size: 13px; margin-top: 6px; }
+
+/* 每日行程 */
+.day-card {
+  background: #fff; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.day-header h3 { margin: 0 0 6px; }
+.day-meta { font-size: 13px; color: #888; }
+.day-meta span { margin-right: 12px; }
+.timeline { list-style: none; padding-left: 0; margin: 16px 0 0; }
+.timeline .stop {
+  display: grid; grid-template-columns: 100px 1fr; gap: 16px;
+  border-left: 3px solid #3498db; padding: 10px 0 10px 14px; margin-left: 8px;
+}
+.timeline .stop:not(:last-child) { padding-bottom: 18px; }
+.t-time { font-weight: 600; color: #3498db; }
+.t-title { font-size: 15px; margin-bottom: 4px; }
+.t-emoji { margin-right: 6px; }
+.rating { color: #f39c12; margin-left: 8px; font-size: 13px; }
+.t-detail { font-size: 13px; color: #666; }
+.t-detail span { margin-right: 14px; }
+.stop-breakfast, .stop-lunch, .stop-dinner { border-left-color: #e74c3c; }
+.stop-evening { border-left-color: #9b59b6; }
+
+/* 预算 */
+.budget-section {
+  display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;
+}
+.budget-pie-wrap {
+  background: #fff; border-radius: 10px; padding: 20px; display: flex; justify-content: center;
+}
+.budget-table table {
+  width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden;
+}
+.budget-table th, .budget-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #eee; }
+.budget-table tr.grand td { font-weight: 700; background: #f7f9fc; }
+.tradeoffs {
+  grid-column: 1 / -1; background: #fff5e6; padding: 16px 20px; border-radius: 10px; margin-top: 8px;
+}
+
+/* 风险 */
+.risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.risk-block {
+  background: #fff; padding: 16px; border-radius: 10px; border-left: 4px solid #95a5a6;
+}
+.risk-block.confidence-green  { border-left-color: #2ecc71; }
+.risk-block.confidence-yellow { border-left-color: #f1c40f; }
+.risk-block.confidence-gray   { border-left-color: #95a5a6; }
+.risk-block h4 { margin: 0 0 10px; }
+.scam-group { margin-bottom: 10px; }
+.emergency { columns: 2; list-style: none; padding: 0; }
+
+/* 清单 */
+.checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.check-group {
+  background: #fff; padding: 16px; border-radius: 10px;
+}
+.check-group h4 { margin: 0 0 8px; }
+.check-group ul { list-style: none; padding: 0; }
+.check-group li { padding: 4px 0; }
+
+/* 置信度徽章 */
+.confidence-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.confidence-green  { background: #2ecc71; }
+.confidence-yellow { background: #f1c40f; }
+.confidence-gray   { background: #95a5a6; }
+
+footer {
+  text-align: center; color: #888; font-size: 12px; padding: 30px 20px;
+}
+
+@media print {
+  header.cover { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
+  .day-card, .hotel-card, .trans-card, .risk-block { break-inside: avoid; }
+  .book-btn { display: none; }
+}
+@media (max-width: 720px) {
+  .transport-section, .budget-section { grid-template-columns: 1fr; }
+}
+
+/* ===== v2.0 新增：实际路线 / 兜底卡 / 数据完整性 ===== */
+
+/* 每日行程的路线步骤 */
+.day-routes {
+  background: #f8f9fa; padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  border-left: 4px solid #3498db;
+}
+.day-routes h4 { margin: 0 0 8px; font-size: 14px; }
+.route-steps { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.7; }
+.route-steps li { padding: 2px 0; }
+.route-source-real { color: #2ecc71; font-weight: 600; font-size: 12px; }
+.route-source-text { color: #555; font-weight: 500; }
+.route-source-fallback { color: #c62828; font-size: 12px; }
+
+/* 推荐理由 */
+.t-reason { color: #777; font-size: 13px; margin: 4px 0 6px; }
+
+/* 当天预算 */
+.day-budget { text-align: right; padding: 8px 0; color: #e67e22; font-weight: 600; }
+
+/* 坐标待校验 marker */
+.warn-badge {
+  display: inline-block; background: #fff3e0; color: #e67e22;
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 6px;
+}
+
+/* xhs 空数据兜底卡 */
+.xhs-empty-card {
+  background: #fafafa; border: 2px dashed #ddd;
+  padding: 24px; border-radius: 12px; text-align: center;
+}
+.xhs-empty-card h4 { margin: 0 0 8px; color: #777; }
+.xhs-empty-card p { color: #888; margin: 4px 0; font-size: 14px; }
+.manual-search { list-style: none; padding: 0; margin-top: 16px; }
+.manual-search li {
+  display: inline-block; margin: 4px 8px;
+}
+.manual-search a {
+  display: inline-block; padding: 6px 14px;
+  background: #fff; border: 1px solid #ddd; border-radius: 16px;
+  color: #3498db; text-decoration: none; font-size: 13px;
+}
+.manual-search a:hover { border-color: #3498db; }
+
+/* 数据完整性面板 */
+.completeness-panel {
+  background: #fff; padding: 24px; border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05); font-size: 14px;
+}
+.comp-row { margin-bottom: 14px; }
+.comp-row strong { display: block; margin-bottom: 6px; }
+.comp-row ul { margin: 0; padding-left: 20px; color: #555; line-height: 1.8; }
+.comp-warn ul { color: #e67e22; }
+.comp-tip {
+  border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px;
+  color: #888; font-size: 13px;
+}
+
+/* 地图图例 */
+.map-legend { font-family: inherit; }
+
+/* confidence 灰色 */
+.confidence-gray {
+  border-left-color: #95a5a6 !important;
+}
+
+</style>
+</head>
+<body>
+<header class="cover">
+  <div class="cover-meta">
+    <h1>雁荡山 · 3日行程</h1>
+    <p class="sub">2026-09-25 ~ 2026-09-27 ｜ 1人 ｜ 预算 ¥1835</p>
+    <div class="confidence-summary">
+      <span class="dot dot-green"></span> 一手数据 0%
+      <span class="dot dot-yellow"></span> 抓取 89%
+      <span class="dot dot-gray"></span> 静态参考 11%
+    </div>
+    <div class="meta-stamp">数据生成时间 2026-08-17T08:48:14+08:00</div>
+  </div>
+</header>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+                         AGENT INSTRUCTIONS · 必读
+═══════════════════════════════════════════════════════════════════════════════
+本 HTML 共 8 个骨架 section，**全部必出**（无论数据完整度）。每个 section 下
+有具体「必须做到 X」的指令，agent 在生成 trip 数据时务必按指令准备字段；
+缺数据时自己想办法补（调工具 / WebSearch / 静态兜底），绝不允许空白渲染。
+缺失任何一项都视为本次任务未完成。
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<!--
+  📍 总览地图 · AGENT MUST-DO:
+  ① POI 必须有坐标。拿不到真坐标时，用城市中心点 + POI 名 marker 兜底，
+     并在 poi.coord_status 写 "unverified"，模板会标"坐标待校验"
+  ② **路线必须是实际道路路线，不是两点之间的直线**。三种合法形式（任选）：
+     a) day.routes[].geometry = [[lng,lat],...] 真实 polyline 坐标数组（最佳）
+     b) day.routes[].description = "沿建国路向东 → 转入人民南路 → 春熙路"
+        路径文字版（OSRM/高德拿不到时用 WebSearch / 自己推理写出）
+     c) 完全无能为力时 day.routes[].source = "straight_line_unavailable"
+        模板会画虚线 + 红字"⚠️ 实际路线未获取"，但**不允许直接用直线还假装是真实路线**
+  ③ 同一天 POI 用同色 marker，不同天换色；起终点要有方向感
+-->
+<section id="overview-map">
+  <h2>📍 总览地图</h2>
+  <div id="map" style="height: 480px; border-radius: 12px;"></div>
+</section>
+
+<!--
+  🚄 大交通 · AGENT MUST-DO:
+  ① 至少给出 1 条去程 + 1 条回程（具体车次/航班号 + 时刻 + 参考价 + 查询时间）
+  ② 每条方案至少 3 个不同平台的可点订票链接（12306/携程/去哪儿/飞猪）
+  ③ 价格旁必须标"参考价 + 查询时刻"，不允许写绝对价
+  数据来源优先级：美团火车票 > 12306 > WebSearch（携程/去哪儿）
+-->
+<section id="transport">
+  <h2>🚄 大交通</h2>
+  <div class="transport-section">
+  <div class="dir-block">
+    <h4>去程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">G1680</div>
+        <div class="trans-route">厦门北 → 雁荡山</div>
+        <div class="trans-time">
+          07:35 - 11:43
+          (248分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥265
+          <small>二等座 ¥265（参考价·查询日 2026-08-17）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">D3302</div>
+        <div class="trans-route">厦门北 → 雁荡山</div>
+        <div class="trans-time">
+          09:20 - 13:26
+          (246分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥265
+          <small>二等座约 ¥265（参考价·查询日 2026-08-17）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  <div class="dir-block">
+    <h4>回程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">D3219（待核实）</div>
+        <div class="trans-route">雁荡山 → 厦门北</div>
+        <div class="trans-time">
+          14:00 - 18:10
+          (250分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥265
+          <small>二等座 ¥230-270（参考价·车次请以 12306 为准）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">G1661（待核实）</div>
+        <div class="trans-route">雁荡山 → 厦门北</div>
+        <div class="trans-time">
+          15:30 - 19:40
+          (250分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥265
+          <small>二等座约 ¥265（参考价·以 12306 为准）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">12306</a>
+            <a href="https://train.ctrip.com/" target="_blank" rel="noopener">携程火车票</a>
+            <a href="https://train.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  
+    <div class="intra-tip">
+      <strong>市内交通</strong>
+      <ul>
+        <li>雁荡山站 → 响岭头：出站免费接驳车约 10 分钟（勿打车被宰）；大量民宿提供免费接送</li>
+        <li>景区观光景交票 ¥40/人、3 天无限次，串联灵峰/灵岩/大龙湫/方洞；响岭头步行 10 分钟到灵峰</li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  🏨 住宿候选 · AGENT MUST-DO:
+  ① 至少 3 家酒店候选（不能凑数，宁少勿假）
+  ② 每家必须有：酒店全名 / 价格区间 / ≥2 个不同平台的预订链接 / 一句"为什么推荐"
+  ③ 数据来源：美团酒店 > xhs 真实评价 > WebSearch
+  ④ 凑不齐 3 家时，明确写"暂时只找到 X 家，建议你打开美团搜更多"，不要硬编造
+-->
+<section id="hotel">
+  <h2>🏨 住宿候选</h2>
+  <div class="hotel-grid">
+  
+    <div class="hotel-card">
+      <div class="h-rank">#1</div>
+      <h4>金来登民宿（雁荡山响岭头店）</h4>
+      <div class="h-price">
+        参考价 ¥138/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.9 ｜ 小红书情感 平价高口碑
+      </div>
+      <div class="h-loc">📍 响岭头村步行街（参考价·查询日 2026-08-17，中秋周末上浮）</div>
+      <div class="h-reason">推荐理由：4.9 分平价农家，¥138 起，响岭头核心步行街，吃喝步行可达</div>
+      <div class="h-amenities">
+        <span class="tag">近步行街</span><span class="tag">含早餐</span><span class="tag">露台房</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E9%87%91%E6%9D%A5%E7%99%BB%E6%B0%91%E5%AE%BF%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E9%87%91%E6%9D%A5%E7%99%BB%E6%B0%91%E5%AE%BF%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E9%87%91%E6%9D%A5%E7%99%BB%E6%B0%91%E5%AE%BF%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E9%87%91%E6%9D%A5%E7%99%BB%E6%B0%91%E5%AE%BF%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#2</div>
+      <h4>秋雁小筑民宿（响岭头店）</h4>
+      <div class="h-price">
+        参考价 ¥260/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.8 ｜ 小红书情感 近灵峰·山景好
+      </div>
+      <div class="h-loc">📍 响岭头村净名路（近灵峰，参考价·查询日 2026-08-17）</div>
+      <div class="h-reason">推荐理由：近灵峰景区，看完夜景步行即回，山景露台适合独处发呆</div>
+      <div class="h-amenities">
+        <span class="tag">近灵峰</span><span class="tag">山景</span><span class="tag">安静</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E7%A7%8B%E9%9B%81%E5%B0%8F%E7%AD%91%E6%B0%91%E5%AE%BF%EF%BC%88%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E7%A7%8B%E9%9B%81%E5%B0%8F%E7%AD%91%E6%B0%91%E5%AE%BF%EF%BC%88%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E7%A7%8B%E9%9B%81%E5%B0%8F%E7%AD%91%E6%B0%91%E5%AE%BF%EF%BC%88%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E7%A7%8B%E9%9B%81%E5%B0%8F%E7%AD%91%E6%B0%91%E5%AE%BF%EF%BC%88%E5%93%8D%E5%B2%AD%E5%A4%B4%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#3</div>
+      <h4>净名居客栈</h4>
+      <div class="h-price">
+        参考价 ¥300/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.9 ｜ 小红书情感 口碑顶流·送点心
+      </div>
+      <div class="h-loc">📍 响岭头（口碑顶流·参考价 ¥230-400）</div>
+      <div class="h-reason">推荐理由：响岭头口碑顶流，宠物友好、送自制点心，中端首选</div>
+      <div class="h-amenities">
+        <span class="tag">送点心</span><span class="tag">宠物友好</span><span class="tag">庭院</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E5%87%80%E5%90%8D%E5%B1%85%E5%AE%A2%E6%A0%88" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E5%87%80%E5%90%8D%E5%B1%85%E5%AE%A2%E6%A0%88" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E5%87%80%E5%90%8D%E5%B1%85%E5%AE%A2%E6%A0%88" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E5%87%80%E5%90%8D%E5%B1%85%E5%AE%A2%E6%A0%88" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#4</div>
+      <h4>全季酒店（雁荡山店）</h4>
+      <div class="h-price">
+        参考价 ¥350/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 连锁标准稳
+      </div>
+      <div class="h-loc">📍 响岭头（连锁·参考价 ¥280-430）</div>
+      <div class="h-reason">推荐理由：连锁标准稳、隔音好，预算宽裕或怕民宿踩雷时选</div>
+      <div class="h-amenities">
+        <span class="tag">连锁</span><span class="tag">免费洗衣</span><span class="tag">含早</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E9%9B%81%E8%8D%A1%E5%B1%B1%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  📅 每日行程 · AGENT MUST-DO:
+  ① 必须按 trip.duration_days 给出**全部天数**的卡片（D1 ~ Dn 一个不能少）
+  ② 每天至少包含：当天主题 / 时间轴 / 3-6 个 POI / 三餐推荐
+  ③ 每个 POI 必须有：名称 / 推荐理由 / 用时建议 / 营业时间 / 评分（缺失时显式标）
+  ④ 每天必须有"当天小地图 + 当天路线"（路线规则同总览地图）
+  ⑤ 每天必须有：当天预算小计 + 体力指数（轻松/适中/暴走）
+-->
+<section id="days">
+  <h2>📅 每日行程</h2>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="1">
+  <header class="day-header">
+    <h3>D1 · 2026-09-25 周五 · 厦门→雁荡山 · 下午灵岩看飞渡（住响岭头）</h3>
+    <div class="day-meta">
+      <span>📍 460km</span>
+      <span>🚶 0.4 体力指数</span>
+      <span>☁️ 秋高气爽 20-28℃，偶有阵雨</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>厦门北乘 G1680 高铁 → 雁荡山站（约 4h08m）
+            
+            
+              · 厦门北站 → 雁荡山站
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>雁荡山站免费接驳车 → 响岭头（10min）
+            
+            
+              · 雁荡山站 → 响岭头午餐 + 入住
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>响岭头 → 灵岩景区（景交车/打车）
+            
+            
+              · 响岭头午餐 + 入住 → 灵岩景区
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>灵岩 → 响岭头步行街晚餐
+            
+            
+              · 灵岩景区 → 响岭头步行街晚餐
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">07:35</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>厦门北站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 乘 G1680 直达雁荡山站，二等座 ¥265（参考价·查询日 2026-08-17），中秋建议提前 1-2 周订票</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 248 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:43</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>雁荡山站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 出站认准免费接驳车 10min 到响岭头，勿坐黑车</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 30 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">12:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>响岭头午餐 + 入住</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 入住响岭头民宿（¥138-300/晚），农家菜午餐</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>灵岩景区</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 看 14:30 灵岩飞渡表演（200 米高空走绳）、小龙湫、卧龙谷、玻璃栈道，约 2h</div>
+          
+          <div class="t-detail">
+            <span>🕐 7:30-17:30</span>
+            <span>🎫 ¥¥50（含飞渡）</span>
+            <span>⏱️ 约 150 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">17:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>响岭头步行街晚餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 农家菜+小吃，饭后逛步行街，早点休息养体力</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥40</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥745</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="2">
+  <header class="day-header">
+    <h3>D2 · 2026-09-26 周六 · 大龙湫 + 灵峰日景 + 灵峰夜景（核心日，住响岭头）</h3>
+    <div class="day-meta">
+      <span>📍 30km</span>
+      <span>🚶 0.55 体力指数</span>
+      <span>☁️ 晴间多云，雨后看瀑布更佳</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>响岭头 → 大龙湫（景交车）
+            
+            
+              · 响岭头早餐 → 大龙湫景区
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>大龙湫 → 响岭头午餐（景交返回）
+            
+            
+              · 大龙湫景区 → 响岭头午餐
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>响岭头步行 → 灵峰日景（10min）
+            
+            
+              · 响岭头午餐 → 灵峰日景
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>灵峰 → 响岭头晚餐
+            
+            
+              · 灵峰日景 → 晚餐（响岭头）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>晚餐后步行 → 灵峰夜景
+            
+            
+              · 晚餐（响岭头） → 灵峰夜景
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-breakfast">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🥐</span>
+            <strong>响岭头早餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 民宿早餐或农家早餐，吃饱再进山</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 6:30 起</span>
+            <span>🎫 ¥人均 ¥15</span>
+            <span>⏱️ 约 40 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>大龙湫景区</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 天下第一单级瀑布落差 197 米 + 剪刀峰移步换景；9 月底水量中等，雨后天晴最佳，约 1.5h</div>
+          
+          <div class="t-detail">
+            <span>🕐 7:30-17:30</span>
+            <span>🎫 ¥¥50</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">11:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>响岭头午餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 回响岭头吃农家菜，稍作休息</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥40</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>灵峰日景</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 合掌峰、观音洞（九层楼阁嵌山缝）、北斗洞、翡翠潭，约 1.5h</div>
+          
+          <div class="t-detail">
+            <span>🕐 7:30-17:30</span>
+            <span>🎫 ¥¥45（联票含）</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">17:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>晚餐（响岭头）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 晚餐休息，备好外套准备夜游</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥45</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">18:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>灵峰夜景</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 雁荡独有必看：夫妻峰/犀牛望月/婆婆抱孙，跟导游手电看剪影，约 1h</div>
+          
+          <div class="t-detail">
+            <span>🕐 18:30-21:00</span>
+            <span>🎫 ¥¥45（另购）</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥320</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="3">
+  <header class="day-header">
+    <h3>D3 · 2026-09-27 周日 · 方洞（可选）· 返程厦门</h3>
+    <div class="day-meta">
+      <span>📍 460km</span>
+      <span>🚶 0.3 体力指数</span>
+      <span>☁️ 返程日，山区多云</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>响岭头 → 方洞景区（景交/打车）
+            
+            
+              · 自然醒 + 早餐/早市 → 方洞景区（可选）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>方洞 → 响岭头午餐
+            
+            
+              · 方洞景区（可选） → 响岭头收尾午餐
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>退房 → 雁荡山站（接驳/打车）
+            
+            
+              · 响岭头收尾午餐 → 退房 → 雁荡山站
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>雁荡山 → 厦门北（高铁约 4h）
+            
+            
+              · 退房 → 雁荡山站 → 雁荡山 → 厦门北（高铁）
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-breakfast">
+        <div class="t-time">08:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🥐</span>
+            <strong>自然醒 + 早餐/早市</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 睡到自然醒，响岭头早市逛吃，收尾节奏放慢</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 6:30 起</span>
+            <span>🎫 ¥人均 ¥15</span>
+            <span>⏱️ 约 40 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>方洞景区（可选）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 悬崖栈道+铁索桥，约 1h；体力一般可换净名谷¥25 或三折瀑¥20</div>
+          
+          <div class="t-detail">
+            <span>🕐 7:30-17:30</span>
+            <span>🎫 ¥¥40</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">11:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>响岭头收尾午餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 最后再吃一顿本地农家菜</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥40</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">12:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>退房 → 雁荡山站</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 免费接驳/打车到站，提前取票安检</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥接驳免费</span>
+            <span>⏱️ 约 40 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>雁荡山 → 厦门北（高铁）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 约 4h 到厦门北；9/27 周日返程高峰，建议提前抢票（车次以 12306 为准）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥二等座 ¥230-270</span>
+            <span>⏱️ 约 250 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥570</div>
+  
+</article>
+  
+</section>
+
+<!--
+  💰 预算明细 · AGENT MUST-DO:
+  ① 必须有总预算 + 6 类目占比（交通/住宿/餐饮/门票/购物/备用）
+  ② 必须有饼图（数据由 budget.categories 驱动，模板自带 Chart.js）
+  ③ 必须有"实际 vs 用户期望预算"对比，超支时标红
+  ④ 凑不齐细项时，按类目占比模板（见 data/skeleton_fallbacks.json）兜底
+-->
+<section id="budget">
+  <h2>💰 预算明细</h2>
+  <div class="budget-section">
+  <div class="budget-pie-wrap">
+    <canvas id="budget-pie" width="320" height="320"></canvas>
+  </div>
+  <div class="budget-table">
+    <table>
+      <thead><tr><th>类目</th><th>金额（¥）</th><th>占比</th></tr></thead>
+      <tbody>
+        
+        
+        <tr><td>大交通</td><td>530</td><td>28.9%</td></tr>
+        <tr><td>住宿</td><td>500</td><td>27.2%</td></tr>
+        <tr><td>餐饮</td><td>300</td><td>16.3%</td></tr>
+        <tr><td>门票</td><td>255</td><td>13.9%</td></tr>
+        <tr><td>市内交通</td><td>50</td><td>2.7%</td></tr>
+        <tr><td>备用</td><td>200</td><td>10.9%</td></tr>
+        <tr class="grand"><td>合计</td><td>1835</td><td>人均 1835</td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+    <div class="tradeoffs">
+      <h4>💡 超支取舍建议</h4>
+      <ul>
+        
+          <li><strong>住宿选平价农家（金来登¥138）</strong> · 节省 ~¥220/人 · 2 晚省约 ¥220，基础干净款够用</li>
+        
+          <li><strong>门票买三绝联票+景交，不单买</strong> · 节省 ~¥40/人 · 联票170 比单买灵峰45+灵岩50+大龙湫50 省约 ¥40</li>
+        
+          <li><strong>方洞/三折瀑作弹性，砍掉</strong> · 节省 ~¥40/人 · 经典版已覆盖三绝，方洞可去可不去</li>
+        
+          <li><strong>返程选 9/27 晚班错峰</strong> · 节省 ~¥30/人 · 周日返程高峰，晚班余票多、价可能更低</li>
+        
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  ⚠️ 风险提示 · AGENT MUST-DO:
+  无论数据完整度，本节必须输出至少 3 类风险：
+    1. 天气（出行日预报 + 异常天气警告，缺时调 WebSearch）
+    2. 节假日 / 人流（结合 risk_knowledge.json + 出行日期）
+    3. 当地骗局 / 防坑（risk_knowledge.json 该城市条目 + xhs"X 避雷"补充）
+  每条风险必须标置信度 🟢🟡⚪
+-->
+<section id="risk">
+  <h2>⚠️ 风险提示</h2>
+  <!--
+  AGENT MUST-DO: 至少 3 类风险（天气 / 节假日 / 防坑），加 1 类应急联系。
+  上游 risk-check 给空时用 skeleton_fallbacks.risk_panel_default 兜底。
+-->
+<div class="risk-panel">
+  <div class="risk-block confidence-gray">
+    <h4>🌤️ 天气</h4>
+    <p>9 月底浙东南秋高气爽，约 20-28℃，昼夜温差大；山区偶有阵雨，9 月仍处沿海台风季尾声。出行前 3 天查乐清/雁荡山实时预报与台风预警。</p>
+    
+      <ul><li>出行前 3 天查雁荡山/乐清天气预报及台风预警（12379）</li><li>9 月底大龙湫水量中等偏小（丰水期 5-8 月），雨后天晴看瀑布+彩虹最佳</li><li>山区温差大，带薄外套；防滑鞋 + 便携雨衣（栈道湿滑）</li></ul>
+    
+  </div>
+
+  
+    <div class="risk-block confidence-yellow">
+      <h4>🎉 节假日</h4>
+      <p><strong>中秋（9/25-9/27，3 天不调休）</strong> · 中秋 3 天不调休，人流中等、远低于国庆；但 9/26（周六）是短途高峰，灵峰夜景与大龙湫建议错峰（早起/晚间去）。雁荡山站为甬台温铁路小站，返程 9/27 下午票需提前抢。</p>
+      
+        <p>建议改期：9/26 早班高铁错峰进山，避开 9/25 晚间抵达人流, 若可请假，10 月中下旬秋色更好、人更少</p>
+      
+    </div>
+  
+
+  <div class="risk-block">
+    <h4>🚨 防坑提示</h4>
+    
+    
+      <div class="scam-group">
+        <strong>交通枢纽</strong>
+        <ul><li>雁荡山站出口黑车拉客，出站认准免费接驳车/正规景交，勿坐黑车</li><li>景区门口包车一日游低价揽客，只走官方景交或正规平台</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>雁荡山本地防坑 · 乐清/雁荡镇</strong>
+        <ul><li>响岭头餐饮进店先问价，海鲜/野味按斤计价要看清时令价</li><li>灵峰夜景有&#39;野导游&#39;收费讲解，官方有免费/低价讲解，勿跟陌生人走</li><li>民宿代订&#39;优惠联票&#39;多为套路，只在景区官方/携程/美团购票</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>登山安全</strong>
+        <ul><li>灵岩玻璃栈道/方洞悬崖栈道恐高慎入，湿滑日注意防滑</li><li>山区手机信号弱，提前下离线地图；结伴信息告知家人</li><li>大龙湫瀑布周边路滑，雨后慢行</li></ul>
+      </div>
+    
+  </div>
+
+  <div class="risk-block confidence-green">
+    <h4>📞 应急电话</h4>
+    <ul class="emergency">
+      <li>报警 110</li>
+      <li>急救 120</li>
+      <li>旅游投诉 12301</li>
+      <li>消费维权 12315</li>
+      <li>气象预警 12379</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!--
+  📓 小红书真实笔记参考 · AGENT MUST-DO:
+  本节必出，至少 6-10 篇真实笔记，按主题分组（攻略/美食/住宿/拍照/避雷/其他）
+  数据获取（按优先级）：
+    Tier 1: 调 xhs CLI（用户已登录时）
+    Tier 2: WebSearch site:xiaohongshu.com（用户跳过登录时）
+    Tier 3: WebSearch 马蜂窝/抖音目的地关键词
+  完全失败时，渲染"本次未拿到第三方游记"提示卡 + 给一组手动搜索链接
+  （绝不允许这一节空白；本 section 即使 xhs_notes=None 也要 include）
+-->
+<section id="xhs-notes">
+  <h2>📓 小红书真实笔记参考</h2>
+  <!--
+  AGENT MUST-DO: 至少 6-10 篇真实笔记，按主题分组。
+  完全没拿到时，自动渲染"未拿到第三方游记"提示 + 给一组手动搜索链接。
+-->
+<div class="xhs-section">
+  
+  <p class="xhs-intro">这里是搜索过程中找到的高质量真实笔记，按主题分类，点击直达原文。</p>
+  
+    <div class="xhs-group">
+      <h4>真实笔记参考 <span class="xhs-count">7 篇</span></h4>
+      <div class="xhs-grid">
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E9%9B%81%E8%8D%A1%E5%B1%B1%20%E6%94%BB%E7%95%A5" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">雁荡山保姆级攻略·门票交通全解</div>
+              <div class="xhs-meta">
+                <span>@trip</span>
+                <span>❤️ 2600</span>
+                <span>💬 180</span>
+              </div>
+              
+                <div class="xhs-snippet">三绝联票170元，景交40元3天，灵峰夜景必看，灵岩飞渡10/14:30/16点</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E9%9B%81%E8%8D%A1%E5%B1%B1%20%E4%BD%8F%E5%AE%BF" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">雁荡山住宿避坑·响岭头村是王者</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 1200</span>
+                <span>💬 75</span>
+              </div>
+              
+                <div class="xhs-snippet">响岭头村均价120-160/晚，避开景区大门口虚高民宿，步行到灵峰夜景</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%A4%A7%E9%BE%99%E6%B9%AB%20%E7%80%91%E5%B8%83" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">大龙湫·天下第一单级瀑布</div>
+              <div class="xhs-meta">
+                <span>@trip</span>
+                <span>❤️ 900</span>
+                <span>💬 55</span>
+              </div>
+              
+                <div class="xhs-snippet">落差197米，剪刀峰移步换景，晴天下午可见彩虹，雨后天晴最壮观</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E7%81%B5%E5%B3%B0%E5%A4%9C%E6%99%AF" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">灵峰夜景·雁荡独一份体验</div>
+              <div class="xhs-meta">
+                <span>@trip</span>
+                <span>❤️ 1500</span>
+                <span>💬 90</span>
+              </div>
+              
+                <div class="xhs-snippet">天黑后山石变剪影，夫妻峰/犀牛望月/婆婆抱孙，跟着导游手电看</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E7%81%B5%E5%B2%A9%20%E9%A3%9E%E6%B8%A1" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">灵岩飞渡·200米高空走绳</div>
+              <div class="xhs-meta">
+                <span>@ctrip</span>
+                <span>❤️ 700</span>
+                <span>💬 40</span>
+              </div>
+              
+                <div class="xhs-snippet">当地药农悬崖绳技，惊险刺激，免费观看，掐好14:30场</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://kyfw.12306.cn/otn/leftTicket/init" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">厦门到雁荡山高铁时刻</div>
+              <div class="xhs-meta">
+                <span>@12306</span>
+                
+                
+              </div>
+              
+                <div class="xhs-snippet">直达雁荡山站（非乐清站），G1680约4h08m，二等座约¥265</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-neutral">🔍 参考</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E9%9B%81%E8%8D%A1%E5%B1%B1%20%E9%81%BF%E9%9B%B7" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">雁荡山避雷·门口包车一日游</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 500</span>
+                <span>💬 30</span>
+              </div>
+              
+                <div class="xhs-snippet">景区门口低价包车一日游多为套路，只走官方景交</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+      </div>
+    </div>
+  
+  <p class="xhs-disclaimer">
+    💡 笔记内容由作者发布，仅作参考。点击卡片跳转小红书原文。
+  </p>
+  
+</div>
+</section>
+
+<section id="data-completeness">
+  <h2>📊 数据完整性</h2>
+  <!--
+  AGENT MUST-DO:
+  这是固定底部面板，告诉用户哪些数据是一手 / 哪些是兜底。
+  data_sources 由 check_deps + agent 实际调用情况组装。
+-->
+<div class="completeness-panel">
+  <div class="comp-row">
+    <strong>✅ 已启用</strong>
+    <ul>
+      
+      
+      
+      <li>WebSearch — 兜底数据源</li>
+    </ul>
+  </div>
+  
+  <p class="comp-tip">
+    💡 想升级数据可信度？把对应数据源配上后告诉 agent「重跑 XX」即可增量更新。
+  </p>
+</div>
+</section>
+
+<!--
+  🎒 行前清单 · AGENT MUST-DO:
+  无论数据完整度，必须输出至少 4 类清单：
+    1. 证件（身份证/驾照/学生证/老年证）
+    2. 充电（充电宝/数据线/转换头）
+    3. 现金/支付（少量现金/支付宝微信备用）
+    4. 应急（常用药/急救联系/保险卡）
+  risk-check 给了具体内容就用具体内容，没给就用以上 4 类硬清单
+  （兜底数据见 data/skeleton_fallbacks.json）
+-->
+<section id="checklist">
+  <h2>🎒 行前清单</h2>
+  <!--
+  AGENT MUST-DO: checklist 至少 4 类（证件/充电/支付/应急）。
+  risk-check 给了具体内容用具体内容，没给就用 skeleton_fallbacks.json 兜底。
+-->
+
+<div class="checklist">
+  
+    <div class="check-group">
+      <h4>🪪 证件</h4>
+      <ul>
+        <li><label><input type="checkbox"> 身份证（高铁取票+民宿入住必备）</label></li><li><label><input type="checkbox"> 学生证/老年证（雁荡山半价，若适用）</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>🔌 充电/数码</h4>
+      <ul>
+        <li><label><input type="checkbox"> 充电宝（≤100Wh）</label></li><li><label><input type="checkbox"> 手机充电线 + 离线地图（山区信号弱）</label></li><li><label><input type="checkbox"> 耳机</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💵 现金/支付</h4>
+      <ul>
+        <li><label><input type="checkbox"> 少量现金 ¥200-300（部分农家乐/小吃只收现金）</label></li><li><label><input type="checkbox"> 支付宝/微信备用</label></li><li><label><input type="checkbox"> 银行卡</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💊 健康/应急</h4>
+      <ul>
+        <li><label><input type="checkbox"> 常用药（肠胃/感冒/创可贴）</label></li><li><label><input type="checkbox"> 防蚊液 + 防晒霜</label></li><li><label><input type="checkbox"> 登山装备：防滑鞋 + 便携雨衣 + 登山杖（可选）</label></li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<footer>
+  <p>由出游规划师 v1.0.0 生成 · 2026-08-17T08:48:14+08:00</p>
+  <p>本报告所有价格 / 营业 / 评分均为查询时刻的参考值，请出行前再核实。</p>
+</footer>
+
+<script>
+  // 总览地图 —— 国内可用瓦片源（按可达性顺序），任何一个失败自动切下一个
+  const map = L.map('map', { preferCanvas: true });
+
+  const TILE_SOURCES = [
+    {
+      // 高德矢量瓦片（无需 key，国内最稳）
+      url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+      options: { subdomains: ['1','2','3','4'], attribution: '高德地图', maxZoom: 18 }
+    },
+    {
+      // 高德卫星瓦片（备用）
+      url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+      options: { subdomains: ['1','2','3','4'], attribution: '高德卫星', maxZoom: 18 }
+    },
+    {
+      // 腾讯地图瓦片（再备用）
+      url: 'https://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={y}&type=vector&style=0',
+      options: { subdomains: ['0','1','2','3'], attribution: '腾讯地图', maxZoom: 18 }
+    },
+    {
+      // OSM（最后兜底，国内可能慢）
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      options: { subdomains: ['a','b','c'], attribution: 'OSM', maxZoom: 18 }
+    }
+  ];
+
+  let tileLayer;
+  let sourceIdx = 0;
+  function loadTileSource(idx) {
+    if (idx >= TILE_SOURCES.length) {
+      document.getElementById('map').innerHTML =
+        '<div style="padding:40px;text-align:center;color:#888;">地图加载失败，请检查网络后刷新</div>';
+      return;
+    }
+    if (tileLayer) map.removeLayer(tileLayer);
+    const src = TILE_SOURCES[idx];
+    tileLayer = L.tileLayer(src.url, src.options);
+    let errorCount = 0;
+    tileLayer.on('tileerror', function () {
+      errorCount++;
+      if (errorCount > 3) {
+        console.warn('瓦片源失败，切换到下一个：', src.attribution);
+        loadTileSource(idx + 1);
+      }
+    });
+    tileLayer.addTo(map);
+  }
+  loadTileSource(0);
+
+  const dayColors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22'];
+  const allLatLngs = [];
+  const days = [{"daily_budget": 745, "date": "2026-09-25 \u5468\u4e94", "day_index": 1, "fatigue_index": 0.4, "routes": [{"description": "\u53a6\u95e8\u5317\u4e58 G1680 \u9ad8\u94c1 \u2192 \u96c1\u8361\u5c71\u7ad9\uff08\u7ea6 4h08m\uff09", "from": 0, "to": 1}, {"description": "\u96c1\u8361\u5c71\u7ad9\u514d\u8d39\u63a5\u9a73\u8f66 \u2192 \u54cd\u5cad\u5934\uff0810min\uff09", "from": 1, "to": 2}, {"description": "\u54cd\u5cad\u5934 \u2192 \u7075\u5ca9\u666f\u533a\uff08\u666f\u4ea4\u8f66/\u6253\u8f66\uff09", "from": 2, "to": 3}, {"description": "\u7075\u5ca9 \u2192 \u54cd\u5cad\u5934\u6b65\u884c\u8857\u665a\u9910", "from": 3, "to": 4}], "stops": [{"duration_display": "248 \u5206\u949f", "duration_min": 248, "poi": {"category": "\u9ad8\u94c1\u7ad9", "coord_status": "unverified", "lat": 24.635, "lng": 118.073, "name": "\u53a6\u95e8\u5317\u7ad9", "open_hours": "\u2014", "recommend_reason": "\u4e58 G1680 \u76f4\u8fbe\u96c1\u8361\u5c71\u7ad9\uff0c\u4e8c\u7b49\u5ea7 \u00a5265\uff08\u53c2\u8003\u4ef7\u00b7\u67e5\u8be2\u65e5 2026-08-17\uff09\uff0c\u4e2d\u79cb\u5efa\u8bae\u63d0\u524d 1-2 \u5468\u8ba2\u7968"}, "time": "07:35", "type": "else"}, {"duration_display": "30 \u5206\u949f", "duration_min": 30, "poi": {"category": "\u9ad8\u94c1\u7ad9", "coord_status": "unverified", "lat": 28.364, "lng": 121.058, "name": "\u96c1\u8361\u5c71\u7ad9", "open_hours": "\u2014", "recommend_reason": "\u51fa\u7ad9\u8ba4\u51c6\u514d\u8d39\u63a5\u9a73\u8f66 10min \u5230\u54cd\u5cad\u5934\uff0c\u52ff\u5750\u9ed1\u8f66"}, "time": "11:43", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u4f4f\u5bbf", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u54cd\u5cad\u5934\u5348\u9910 + \u5165\u4f4f", "open_hours": "\u2014", "recommend_reason": "\u5165\u4f4f\u54cd\u5cad\u5934\u6c11\u5bbf\uff08\u00a5138-300/\u665a\uff09\uff0c\u519c\u5bb6\u83dc\u5348\u9910"}, "time": "12:30", "type": "lunch"}, {"duration_display": "150 \u5206\u949f", "duration_min": 150, "poi": {"category": "\u5c71\u5cf0", "coord_status": "unverified", "lat": 28.358, "lng": 121.105, "name": "\u7075\u5ca9\u666f\u533a", "open_hours": "7:30-17:30", "recommend_reason": "\u770b 14:30 \u7075\u5ca9\u98de\u6e21\u8868\u6f14\uff08200 \u7c73\u9ad8\u7a7a\u8d70\u7ef3\uff09\u3001\u5c0f\u9f99\u6e6b\u3001\u5367\u9f99\u8c37\u3001\u73bb\u7483\u6808\u9053\uff0c\u7ea6 2h", "ticket_price": "\u00a550\uff08\u542b\u98de\u6e21\uff09"}, "time": "14:00", "type": "else"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u54cd\u5cad\u5934\u6b65\u884c\u8857\u665a\u9910", "open_hours": "\u5168\u5929", "recommend_reason": "\u519c\u5bb6\u83dc+\u5c0f\u5403\uff0c\u996d\u540e\u901b\u6b65\u884c\u8857\uff0c\u65e9\u70b9\u4f11\u606f\u517b\u4f53\u529b", "ticket_price": "\u4eba\u5747 \u00a540"}, "time": "17:30", "type": "dinner"}], "theme": "\u53a6\u95e8\u2192\u96c1\u8361\u5c71 \u00b7 \u4e0b\u5348\u7075\u5ca9\u770b\u98de\u6e21\uff08\u4f4f\u54cd\u5cad\u5934\uff09", "total_distance_km": 460, "weather": {"summary": "\u79cb\u9ad8\u6c14\u723d 20-28\u2103\uff0c\u5076\u6709\u9635\u96e8"}}, {"daily_budget": 320, "date": "2026-09-26 \u5468\u516d", "day_index": 2, "fatigue_index": 0.55, "routes": [{"description": "\u54cd\u5cad\u5934 \u2192 \u5927\u9f99\u6e6b\uff08\u666f\u4ea4\u8f66\uff09", "from": 0, "to": 1}, {"description": "\u5927\u9f99\u6e6b \u2192 \u54cd\u5cad\u5934\u5348\u9910\uff08\u666f\u4ea4\u8fd4\u56de\uff09", "from": 1, "to": 2}, {"description": "\u54cd\u5cad\u5934\u6b65\u884c \u2192 \u7075\u5cf0\u65e5\u666f\uff0810min\uff09", "from": 2, "to": 3}, {"description": "\u7075\u5cf0 \u2192 \u54cd\u5cad\u5934\u665a\u9910", "from": 3, "to": 4}, {"description": "\u665a\u9910\u540e\u6b65\u884c \u2192 \u7075\u5cf0\u591c\u666f", "from": 4, "to": 5}], "stops": [{"duration_display": "40 \u5206\u949f", "duration_min": 40, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u54cd\u5cad\u5934\u65e9\u9910", "open_hours": "\u7ea6 6:30 \u8d77", "recommend_reason": "\u6c11\u5bbf\u65e9\u9910\u6216\u519c\u5bb6\u65e9\u9910\uff0c\u5403\u9971\u518d\u8fdb\u5c71", "ticket_price": "\u4eba\u5747 \u00a515"}, "time": "08:00", "type": "breakfast"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u7011\u5e03", "coord_status": "unverified", "lat": 28.345, "lng": 121.125, "name": "\u5927\u9f99\u6e6b\u666f\u533a", "open_hours": "7:30-17:30", "recommend_reason": "\u5929\u4e0b\u7b2c\u4e00\u5355\u7ea7\u7011\u5e03\u843d\u5dee 197 \u7c73 + \u526a\u5200\u5cf0\u79fb\u6b65\u6362\u666f\uff1b9 \u6708\u5e95\u6c34\u91cf\u4e2d\u7b49\uff0c\u96e8\u540e\u5929\u6674\u6700\u4f73\uff0c\u7ea6 1.5h", "ticket_price": "\u00a550"}, "time": "09:00", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u54cd\u5cad\u5934\u5348\u9910", "open_hours": "\u5168\u5929", "recommend_reason": "\u56de\u54cd\u5cad\u5934\u5403\u519c\u5bb6\u83dc\uff0c\u7a0d\u4f5c\u4f11\u606f", "ticket_price": "\u4eba\u5747 \u00a540"}, "time": "11:30", "type": "lunch"}, {"duration_display": "90 \u5206\u949f", "duration_min": 90, "poi": {"category": "\u5c71\u5cf0", "coord_status": "unverified", "lat": 28.378, "lng": 121.093, "name": "\u7075\u5cf0\u65e5\u666f", "open_hours": "7:30-17:30", "recommend_reason": "\u5408\u638c\u5cf0\u3001\u89c2\u97f3\u6d1e\uff08\u4e5d\u5c42\u697c\u9601\u5d4c\u5c71\u7f1d\uff09\u3001\u5317\u6597\u6d1e\u3001\u7fe1\u7fe0\u6f6d\uff0c\u7ea6 1.5h", "ticket_price": "\u00a545\uff08\u8054\u7968\u542b\uff09"}, "time": "14:00", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u665a\u9910\uff08\u54cd\u5cad\u5934\uff09", "open_hours": "\u5168\u5929", "recommend_reason": "\u665a\u9910\u4f11\u606f\uff0c\u5907\u597d\u5916\u5957\u51c6\u5907\u591c\u6e38", "ticket_price": "\u4eba\u5747 \u00a545"}, "time": "17:00", "type": "dinner"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u591c\u666f", "coord_status": "unverified", "lat": 28.378, "lng": 121.093, "name": "\u7075\u5cf0\u591c\u666f", "open_hours": "18:30-21:00", "recommend_reason": "\u96c1\u8361\u72ec\u6709\u5fc5\u770b\uff1a\u592b\u59bb\u5cf0/\u7280\u725b\u671b\u6708/\u5a46\u5a46\u62b1\u5b59\uff0c\u8ddf\u5bfc\u6e38\u624b\u7535\u770b\u526a\u5f71\uff0c\u7ea6 1h", "ticket_price": "\u00a545\uff08\u53e6\u8d2d\uff09"}, "time": "18:30", "type": "evening"}], "theme": "\u5927\u9f99\u6e6b + \u7075\u5cf0\u65e5\u666f + \u7075\u5cf0\u591c\u666f\uff08\u6838\u5fc3\u65e5\uff0c\u4f4f\u54cd\u5cad\u5934\uff09", "total_distance_km": 30, "weather": {"summary": "\u6674\u95f4\u591a\u4e91\uff0c\u96e8\u540e\u770b\u7011\u5e03\u66f4\u4f73"}}, {"daily_budget": 570, "date": "2026-09-27 \u5468\u65e5", "day_index": 3, "fatigue_index": 0.3, "routes": [{"description": "\u54cd\u5cad\u5934 \u2192 \u65b9\u6d1e\u666f\u533a\uff08\u666f\u4ea4/\u6253\u8f66\uff09", "from": 0, "to": 1}, {"description": "\u65b9\u6d1e \u2192 \u54cd\u5cad\u5934\u5348\u9910", "from": 1, "to": 2}, {"description": "\u9000\u623f \u2192 \u96c1\u8361\u5c71\u7ad9\uff08\u63a5\u9a73/\u6253\u8f66\uff09", "from": 2, "to": 3}, {"description": "\u96c1\u8361\u5c71 \u2192 \u53a6\u95e8\u5317\uff08\u9ad8\u94c1\u7ea6 4h\uff09", "from": 3, "to": 4}], "stops": [{"duration_display": "40 \u5206\u949f", "duration_min": 40, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u81ea\u7136\u9192 + \u65e9\u9910/\u65e9\u5e02", "open_hours": "\u7ea6 6:30 \u8d77", "recommend_reason": "\u7761\u5230\u81ea\u7136\u9192\uff0c\u54cd\u5cad\u5934\u65e9\u5e02\u901b\u5403\uff0c\u6536\u5c3e\u8282\u594f\u653e\u6162", "ticket_price": "\u4eba\u5747 \u00a515"}, "time": "08:30", "type": "breakfast"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u60ac\u5d16\u6808\u9053", "coord_status": "unverified", "lat": 28.368, "lng": 121.075, "name": "\u65b9\u6d1e\u666f\u533a\uff08\u53ef\u9009\uff09", "open_hours": "7:30-17:30", "recommend_reason": "\u60ac\u5d16\u6808\u9053+\u94c1\u7d22\u6865\uff0c\u7ea6 1h\uff1b\u4f53\u529b\u4e00\u822c\u53ef\u6362\u51c0\u540d\u8c37\u00a525 \u6216\u4e09\u6298\u7011\u00a520", "ticket_price": "\u00a540"}, "time": "09:30", "type": "else"}, {"duration_display": "60 \u5206\u949f", "duration_min": 60, "poi": {"category": "\u7f8e\u98df", "coord_status": "unverified", "lat": 28.372, "lng": 121.085, "name": "\u54cd\u5cad\u5934\u6536\u5c3e\u5348\u9910", "open_hours": "\u5168\u5929", "recommend_reason": "\u6700\u540e\u518d\u5403\u4e00\u987f\u672c\u5730\u519c\u5bb6\u83dc", "ticket_price": "\u4eba\u5747 \u00a540"}, "time": "11:30", "type": "lunch"}, {"duration_display": "40 \u5206\u949f", "duration_min": 40, "poi": {"category": "\u4ea4\u901a", "coord_status": "unverified", "lat": 28.364, "lng": 121.058, "name": "\u9000\u623f \u2192 \u96c1\u8361\u5c71\u7ad9", "open_hours": "\u2014", "recommend_reason": "\u514d\u8d39\u63a5\u9a73/\u6253\u8f66\u5230\u7ad9\uff0c\u63d0\u524d\u53d6\u7968\u5b89\u68c0", "ticket_price": "\u63a5\u9a73\u514d\u8d39"}, "time": "12:30", "type": "else"}, {"duration_display": "250 \u5206\u949f", "duration_min": 250, "poi": {"category": "\u9ad8\u94c1", "coord_status": "unverified", "lat": 24.635, "lng": 118.073, "name": "\u96c1\u8361\u5c71 \u2192 \u53a6\u95e8\u5317\uff08\u9ad8\u94c1\uff09", "open_hours": "\u2014", "recommend_reason": "\u7ea6 4h \u5230\u53a6\u95e8\u5317\uff1b9/27 \u5468\u65e5\u8fd4\u7a0b\u9ad8\u5cf0\uff0c\u5efa\u8bae\u63d0\u524d\u62a2\u7968\uff08\u8f66\u6b21\u4ee5 12306 \u4e3a\u51c6\uff09", "ticket_price": "\u4e8c\u7b49\u5ea7 \u00a5230-270"}, "time": "14:00", "type": "else"}], "theme": "\u65b9\u6d1e\uff08\u53ef\u9009\uff09\u00b7 \u8fd4\u7a0b\u53a6\u95e8", "total_distance_km": 460, "weather": {"summary": "\u8fd4\u7a0b\u65e5\uff0c\u5c71\u533a\u591a\u4e91"}}];
+
+  days.forEach((day, idx) => {
+    const color = dayColors[idx % dayColors.length];
+
+    // === 路线绘制 ===
+    // 优先使用 day.routes[].geometry（真实道路 polyline）
+    // 拿不到时退到 day.routes[].description（路径文字版，画虚线）
+    // 都没有时退到直接连点（虚线 + 红字提示）
+    const routes = day.routes || [];
+    if (routes.length > 0) {
+      routes.forEach(r => {
+        if (r.geometry && r.geometry.length >= 2) {
+          // 真实路线（lng,lat → lat,lng for Leaflet）
+          const latlngs = r.geometry.map(p => [p[1], p[0]]);
+          L.polyline(latlngs, {
+            color, weight: 5, opacity: 0.85
+          }).addTo(map).bindTooltip(`D${day.day_index} 路段 ${r.from}→${r.to} · 实际道路`, {sticky: true});
+        } else if (r.source === "straight_line_unavailable" || !r.geometry) {
+          // 兜底：直线 + 虚线 + 红字提示
+          const stopFrom = day.stops[r.from], stopTo = day.stops[r.to];
+          if (stopFrom && stopTo && stopFrom.poi.lat && stopTo.poi.lat) {
+            L.polyline([
+              [stopFrom.poi.lat, stopFrom.poi.lng],
+              [stopTo.poi.lat,   stopTo.poi.lng]
+            ], {
+              color: '#999', weight: 3, opacity: 0.6, dashArray: '8,8'
+            }).addTo(map).bindTooltip(
+              `⚠️ D${day.day_index} 路段 ${r.from}→${r.to} 实际路线未获取`,
+              {sticky: true}
+            );
+          }
+        }
+      });
+    } else {
+      // 完全没 routes 字段时，老兼容：按 stops 顺序连虚线
+      const dayLatLngs = day.stops.map(s => [s.poi.lat, s.poi.lng])
+                                  .filter(p => p[0] && p[1]);
+      if (dayLatLngs.length >= 2) {
+        L.polyline(dayLatLngs, {
+          color: '#999', weight: 3, opacity: 0.6, dashArray: '8,8'
+        }).addTo(map).bindTooltip(
+          `⚠️ D${day.day_index} 实际路线数据缺失（agent 未生成 routes 字段）`,
+          {sticky: true}
+        );
+      }
+    }
+
+    // === Marker 绘制 ===
+    day.stops.forEach((s, i) => {
+      if (!s.poi.lat || !s.poi.lng) return;
+      const isUnverified = s.poi.coord_status === "unverified";
+      const icon = L.divIcon({
+        className: 'day-marker',
+        html: `<div style="background:${color};color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;border:${isUnverified?'2px dashed #fff':'2px solid #fff'};box-shadow:0 1px 4px rgba(0,0,0,0.3);">D${day.day_index}·${i+1}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+      const m = L.marker([s.poi.lat, s.poi.lng], { icon }).addTo(map);
+      const verifyTag = isUnverified ? '<br><span style="color:#e67e22;">⚠️ 坐标待校验</span>' : '';
+      m.bindPopup(`<b>D${day.day_index} 第 ${i+1} 站 · ${s.poi.name}</b><br>🕐 ${s.time}<br>${s.poi.category||''}${verifyTag}`);
+      allLatLngs.push([s.poi.lat, s.poi.lng]);
+    });
+  });
+
+  // === 路线图例 ===
+  const legend = L.control({position: 'bottomleft'});
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div', 'map-legend');
+    div.innerHTML = `
+      <div style="background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:6px;font-size:12px;line-height:1.6;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+        <div><span style="display:inline-block;width:24px;height:3px;background:#3498db;vertical-align:middle;"></span> 实际道路路线</div>
+        <div><span style="display:inline-block;width:24px;height:3px;background:#999;border-top:1px dashed #999;vertical-align:middle;"></span> 实际路线未获取（直线示意）</div>
+      </div>`;
+    return div;
+  };
+  legend.addTo(map);
+  if (allLatLngs.length === 1) {
+    map.setView(allLatLngs[0], 13);
+  } else if (allLatLngs.length > 1) {
+    map.fitBounds(allLatLngs, { padding: [60, 60], maxZoom: 14 });
+  } else {
+    map.setView([35, 105], 5);
+  }
+
+  // 预算饼图
+  const ctx = document.getElementById('budget-pie');
+  if (ctx) {
+    const bd = {"accommodation": 500, "buffer": 200, "food": 300, "ticket": 255, "transport_intra": 50, "transport_long": 530};
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['大交通','住宿','餐饮','门票','市内交通','备用'],
+        datasets: [{
+          data: [bd.transport_long, bd.accommodation, bd.food, bd.ticket, bd.transport_intra, bd.buffer],
+          backgroundColor: ['#3498db','#9b59b6','#e74c3c','#f39c12','#1abc9c','#95a5a6'],
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+</script>
+</body>
+</html>
