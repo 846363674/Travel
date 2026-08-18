@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+  workflow_dispatch:   # 可在 Actions 页面手动点击「Run workflow」强制重建
 
 permissions:
   contents: write
