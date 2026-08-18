@@ -78,7 +78,17 @@ body {
   background-size: 200px 200px, auto;
 }
 
-.page-index  { overflow-y: auto; }
+.page-index  {
+  overflow-y: auto;               /* 卡片超过一屏时出现滚动条 */
+  overscroll-behavior-y: contain; /* 滚到底后不再带动外层滚动 */
+}
+.page-index::-webkit-scrollbar { width: 10px; }
+.page-index::-webkit-scrollbar-track { background: transparent; }
+.page-index::-webkit-scrollbar-thumb {
+  background: rgba(42, 38, 32, 0.22);
+  border-radius: 5px;
+}
+.page-index::-webkit-scrollbar-thumb:hover { background: rgba(42, 38, 32, 0.38); }
 .page-viewer {
   visibility: hidden;
   display: flex;
@@ -178,10 +188,19 @@ body {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));   /* 一行最多 3 个 */
   gap: 28px;
   margin-top: 34px;
   perspective: 1200px;
+}
+
+/* 卡片较多、超过一屏时由 .page-index 滚动条承接；
+   窄屏自动降列，避免 3 列挤在一起 */
+@media (max-width: 900px) {
+  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .card-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---- 卡片（攻略入口） ---- */
