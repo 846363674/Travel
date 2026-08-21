@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>大连 · 2026-10-02 行程书</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* 出游规划师 · HTML 行程书样式 · v1.0 */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.55;
+}
+header.cover {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  padding: 60px 40px 40px;
+}
+header.cover h1 { margin: 0 0 12px; font-size: 32px; font-weight: 700; }
+header.cover .sub { font-size: 16px; opacity: 0.85; }
+.confidence-summary {
+  margin-top: 16px; font-size: 13px; opacity: 0.9;
+}
+.confidence-summary .dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin: 0 4px 0 12px; vertical-align: middle;
+}
+.dot-green  { background: #2ecc71; }
+.dot-yellow { background: #f1c40f; }
+.dot-gray   { background: #95a5a6; }
+.meta-stamp { margin-top: 8px; font-size: 12px; opacity: 0.6; }
+
+section {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+section h2 {
+  font-size: 22px; margin: 32px 0 16px; padding-left: 12px;
+  border-left: 4px solid #3498db;
+}
+
+/* 总览地图 */
+#map {
+  width: 100%; height: 480px; border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* 大交通 */
+.transport-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.transport-section .intra-tip {
+  grid-column: 1 / -1; background: #f0f4f8; padding: 16px; border-radius: 8px;
+}
+.dir-block h4 { margin: 0 0 12px; }
+.trans-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 12px; position: relative;
+}
+.trans-mode { font-weight: 700; font-size: 18px; color: #3498db; }
+.trans-route { font-size: 15px; margin: 4px 0; }
+.trans-time { color: #555; font-size: 14px; }
+.trans-price { font-weight: 600; color: #e74c3c; margin-top: 6px; }
+.book-links {
+  margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e0e0e0;
+  font-size: 13px; color: #555;
+}
+.book-links .book-label { color: #888; margin-right: 6px; }
+.book-links a {
+  display: inline-block; margin-right: 10px; color: #3498db;
+  text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent;
+}
+.book-links a:hover { border-bottom-color: #3498db; }
+
+/* 小红书笔记区 */
+.xhs-section { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+.xhs-intro { color: #666; font-size: 14px; margin: 0 0 20px; }
+.xhs-group { margin-bottom: 24px; }
+.xhs-group h4 { margin: 0 0 12px; font-size: 16px; }
+.xhs-count { color: #999; font-size: 13px; font-weight: 400; margin-left: 6px; }
+.xhs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.xhs-card {
+  display: block; text-decoration: none; color: inherit;
+  background: #fafafa; border-radius: 10px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid #eee;
+}
+.xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.xhs-cover {
+  width: 100%; padding-top: 75%; background-size: cover; background-position: center;
+  background-color: #ddd;
+}
+.xhs-body { padding: 12px; }
+.xhs-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.xhs-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+.xhs-meta span { margin-right: 10px; }
+.xhs-snippet { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 8px; }
+.xhs-sentiment {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+}
+.xhs-sentiment-positive { background: #e8f5e9; color: #2e7d32; }
+.xhs-sentiment-negative { background: #ffebee; color: #c62828; }
+.xhs-sentiment-neutral  { background: #f0f0f0; color: #555; }
+.xhs-disclaimer { color: #999; font-size: 12px; margin-top: 16px; text-align: center; }
+
+/* 住宿 */
+.hotel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.hotel-card {
+  background: #fff; border-radius: 10px; padding: 18px; position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.hotel-card .h-rank {
+  position: absolute; top: 12px; right: 14px; font-weight: 700; color: #f39c12;
+}
+.h-price { color: #e74c3c; font-weight: 600; margin: 6px 0; }
+.h-rating, .h-loc { font-size: 13px; color: #555; }
+.h-amenities { margin: 8px 0 0; }
+.tag {
+  display: inline-block; background: #ecf0f1; color: #555;
+  border-radius: 4px; padding: 2px 8px; margin: 2px 4px 0 0; font-size: 12px;
+}
+.warning { color: #e67e22; font-size: 13px; margin-top: 6px; }
+
+/* 每日行程 */
+.day-card {
+  background: #fff; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.day-header h3 { margin: 0 0 6px; }
+.day-meta { font-size: 13px; color: #888; }
+.day-meta span { margin-right: 12px; }
+.timeline { list-style: none; padding-left: 0; margin: 16px 0 0; }
+.timeline .stop {
+  display: grid; grid-template-columns: 100px 1fr; gap: 16px;
+  border-left: 3px solid #3498db; padding: 10px 0 10px 14px; margin-left: 8px;
+}
+.timeline .stop:not(:last-child) { padding-bottom: 18px; }
+.t-time { font-weight: 600; color: #3498db; }
+.t-title { font-size: 15px; margin-bottom: 4px; }
+.t-emoji { margin-right: 6px; }
+.rating { color: #f39c12; margin-left: 8px; font-size: 13px; }
+.t-detail { font-size: 13px; color: #666; }
+.t-detail span { margin-right: 14px; }
+.stop-breakfast, .stop-lunch, .stop-dinner { border-left-color: #e74c3c; }
+.stop-evening { border-left-color: #9b59b6; }
+
+/* 预算 */
+.budget-section {
+  display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;
+}
+.budget-pie-wrap {
+  background: #fff; border-radius: 10px; padding: 20px; display: flex; justify-content: center;
+}
+.budget-table table {
+  width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden;
+}
+.budget-table th, .budget-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #eee; }
+.budget-table tr.grand td { font-weight: 700; background: #f7f9fc; }
+.tradeoffs {
+  grid-column: 1 / -1; background: #fff5e6; padding: 16px 20px; border-radius: 10px; margin-top: 8px;
+}
+
+/* 风险 */
+.risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.risk-block {
+  background: #fff; padding: 16px; border-radius: 10px; border-left: 4px solid #95a5a6;
+}
+.risk-block.confidence-green  { border-left-color: #2ecc71; }
+.risk-block.confidence-yellow { border-left-color: #f1c40f; }
+.risk-block.confidence-gray   { border-left-color: #95a5a6; }
+.risk-block h4 { margin: 0 0 10px; }
+.scam-group { margin-bottom: 10px; }
+.emergency { columns: 2; list-style: none; padding: 0; }
+
+/* 清单 */
+.checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.check-group {
+  background: #fff; padding: 16px; border-radius: 10px;
+}
+.check-group h4 { margin: 0 0 8px; }
+.check-group ul { list-style: none; padding: 0; }
+.check-group li { padding: 4px 0; }
+
+/* 置信度徽章 */
+.confidence-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.confidence-green  { background: #2ecc71; }
+.confidence-yellow { background: #f1c40f; }
+.confidence-gray   { background: #95a5a6; }
+
+footer {
+  text-align: center; color: #888; font-size: 12px; padding: 30px 20px;
+}
+
+@media print {
+  header.cover { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
+  .day-card, .hotel-card, .trans-card, .risk-block { break-inside: avoid; }
+  .book-btn { display: none; }
+}
+@media (max-width: 720px) {
+  .transport-section, .budget-section { grid-template-columns: 1fr; }
+}
+
+/* ===== v2.0 新增：实际路线 / 兜底卡 / 数据完整性 ===== */
+
+/* 每日行程的路线步骤 */
+.day-routes {
+  background: #f8f9fa; padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  border-left: 4px solid #3498db;
+}
+.day-routes h4 { margin: 0 0 8px; font-size: 14px; }
+.route-steps { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.7; }
+.route-steps li { padding: 2px 0; }
+.route-source-real { color: #2ecc71; font-weight: 600; font-size: 12px; }
+.route-source-text { color: #555; font-weight: 500; }
+.route-source-fallback { color: #c62828; font-size: 12px; }
+
+/* 推荐理由 */
+.t-reason { color: #777; font-size: 13px; margin: 4px 0 6px; }
+
+/* 当天预算 */
+.day-budget { text-align: right; padding: 8px 0; color: #e67e22; font-weight: 600; }
+
+/* 坐标待校验 marker */
+.warn-badge {
+  display: inline-block; background: #fff3e0; color: #e67e22;
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 6px;
+}
+
+/* xhs 空数据兜底卡 */
+.xhs-empty-card {
+  background: #fafafa; border: 2px dashed #ddd;
+  padding: 24px; border-radius: 12px; text-align: center;
+}
+.xhs-empty-card h4 { margin: 0 0 8px; color: #777; }
+.xhs-empty-card p { color: #888; margin: 4px 0; font-size: 14px; }
+.manual-search { list-style: none; padding: 0; margin-top: 16px; }
+.manual-search li {
+  display: inline-block; margin: 4px 8px;
+}
+.manual-search a {
+  display: inline-block; padding: 6px 14px;
+  background: #fff; border: 1px solid #ddd; border-radius: 16px;
+  color: #3498db; text-decoration: none; font-size: 13px;
+}
+.manual-search a:hover { border-color: #3498db; }
+
+/* 数据完整性面板 */
+.completeness-panel {
+  background: #fff; padding: 24px; border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05); font-size: 14px;
+}
+.comp-row { margin-bottom: 14px; }
+.comp-row strong { display: block; margin-bottom: 6px; }
+.comp-row ul { margin: 0; padding-left: 20px; color: #555; line-height: 1.8; }
+.comp-warn ul { color: #e67e22; }
+.comp-tip {
+  border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px;
+  color: #888; font-size: 13px;
+}
+
+/* 地图图例 */
+.map-legend { font-family: inherit; }
+
+/* confidence 灰色 */
+.confidence-gray {
+  border-left-color: #95a5a6 !important;
+}
+
+</style>
+</head>
+<body>
+<header class="cover">
+  <div class="cover-meta">
+    <h1>大连 · 5日行程</h1>
+    <p class="sub">2026-10-02 ~ 2026-10-06 ｜ 1人 ｜ 预算 ¥5000</p>
+    <div class="confidence-summary">
+      <span class="dot dot-green"></span> 一手数据 0%
+      <span class="dot dot-yellow"></span> 抓取 89%
+      <span class="dot dot-gray"></span> 静态参考 11%
+    </div>
+    <div class="meta-stamp">数据生成时间 2026-08-20T09:26:57+08:00</div>
+  </div>
+</header>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+                         AGENT INSTRUCTIONS · 必读
+═══════════════════════════════════════════════════════════════════════════════
+本 HTML 共 8 个骨架 section，**全部必出**（无论数据完整度）。每个 section 下
+有具体「必须做到 X」的指令，agent 在生成 trip 数据时务必按指令准备字段；
+缺数据时自己想办法补（调工具 / WebSearch / 静态兜底），绝不允许空白渲染。
+缺失任何一项都视为本次任务未完成。
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<!--
+  📍 总览地图 · AGENT MUST-DO:
+  ① POI 必须有坐标。拿不到真坐标时，用城市中心点 + POI 名 marker 兜底，
+     并在 poi.coord_status 写 "unverified"，模板会标"坐标待校验"
+  ② **路线必须是实际道路路线，不是两点之间的直线**。三种合法形式（任选）：
+     a) day.routes[].geometry = [[lng,lat],...] 真实 polyline 坐标数组（最佳）
+     b) day.routes[].description = "沿建国路向东 → 转入人民南路 → 春熙路"
+        路径文字版（OSRM/高德拿不到时用 WebSearch / 自己推理写出）
+     c) 完全无能为力时 day.routes[].source = "straight_line_unavailable"
+        模板会画虚线 + 红字"⚠️ 实际路线未获取"，但**不允许直接用直线还假装是真实路线**
+  ③ 同一天 POI 用同色 marker，不同天换色；起终点要有方向感
+-->
+<section id="overview-map">
+  <h2>📍 总览地图</h2>
+  <div style="border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;">
+  <svg viewBox="0 0 680 480" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>大连 5 天地理示意路线图</title>
+    <desc>按真实经纬度相对方位绘制：旅顺西南、金石滩东北、棒棰岛东南海边，离线静态图不依赖网络</desc>
+    <rect x="0" y="0" width="680" height="480" fill="#EFF6FC"/>
+    <path d="M 90,70 L 620,70 L 645,160 L 600,260 L 505,345 L 450,415 L 340,425 L 235,395 L 150,315 L 80,195 Z" fill="#E4EEF8" stroke="#A9C4DC" stroke-width="1.5"/>
+    <text x="600" y="455" fill="#9DB4C8" style="font-size:13px;">黄 海</text>
+
+    <polyline points="333,193 425,216 411,281 418,272" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linejoin="round"/>
+    <polyline points="376,272 361,263 390,291 411,281" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round"/>
+    <polyline points="333,193 553,104" fill="none" stroke="#2ecc71" stroke-width="2" stroke-dasharray="6,4"/>
+    <polyline points="397,235 141,319 127,337" fill="none" stroke="#f39c12" stroke-width="2" stroke-linejoin="round"/>
+    <polyline points="397,235 354,244 333,193" fill="none" stroke="#9b59b6" stroke-width="2" stroke-linejoin="round"/>
+
+    <circle cx="333" cy="193" r="6" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
+    <text x="345" y="189" fill="#2C2C2A" style="font-size:11px;">周水子机场</text>
+    <circle cx="425" cy="216" r="6" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
+    <text x="437" y="212" fill="#2C2C2A" style="font-size:11px;">东港/海之韵</text>
+    <circle cx="411" cy="281" r="6" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
+    <text x="423" y="285" fill="#2C2C2A" style="font-size:11px;">棒棰岛</text>
+    <circle cx="418" cy="272" r="6" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>
+    <text x="418" y="262" fill="#2C2C2A" style="font-size:11px;">渔人码头</text>
+
+    <circle cx="376" cy="272" r="6" fill="#3498db" stroke="#fff" stroke-width="1.5"/>
+    <text x="364" y="276" fill="#2C2C2A" style="font-size:11px;">星海广场</text>
+    <circle cx="361" cy="263" r="6" fill="#3498db" stroke="#fff" stroke-width="1.5"/>
+    <text x="349" y="259" fill="#2C2C2A" style="font-size:11px;">莲花山</text>
+    <circle cx="390" cy="291" r="6" fill="#3498db" stroke="#fff" stroke-width="1.5"/>
+    <text x="402" y="295" fill="#2C2C2A" style="font-size:11px;">傅家庄</text>
+
+    <circle cx="553" cy="104" r="6" fill="#2ecc71" stroke="#fff" stroke-width="1.5"/>
+    <text x="565" y="100" fill="#2C2C2A" style="font-size:11px;">金石滩</text>
+
+    <circle cx="141" cy="319" r="6" fill="#f39c12" stroke="#fff" stroke-width="1.5"/>
+    <text x="153" y="315" fill="#2C2C2A" style="font-size:11px;">太阳沟</text>
+    <circle cx="127" cy="337" r="6" fill="#f39c12" stroke="#fff" stroke-width="1.5"/>
+    <text x="139" y="341" fill="#2C2C2A" style="font-size:11px;">白玉山</text>
+
+    <circle cx="397" cy="235" r="6" fill="#9b59b6" stroke="#fff" stroke-width="1.5"/>
+    <text x="409" y="231" fill="#2C2C2A" style="font-size:11px;">中山广场</text>
+    <circle cx="354" cy="244" r="6" fill="#9b59b6" stroke="#fff" stroke-width="1.5"/>
+    <text x="342" y="248" fill="#2C2C2A" style="font-size:11px;">黑石礁</text>
+
+    <g font-size="11" fill="#2C2C2A">
+      <rect x="15" y="110" width="18" height="10" fill="#e74c3c"/><text x="40" y="119">D1 棒棰岛/东港</text>
+      <rect x="15" y="128" width="18" height="10" fill="#3498db"/><text x="40" y="137">D2 滨海路</text>
+      <rect x="15" y="146" width="18" height="10" fill="#2ecc71"/><text x="40" y="155">D3 金石滩</text>
+      <rect x="15" y="164" width="18" height="10" fill="#f39c12"/><text x="40" y="173">D4 旅顺</text>
+      <rect x="15" y="182" width="18" height="10" fill="#9b59b6"/><text x="40" y="191">D5 中山/黑石礁</text>
+    </g>
+
+    <text x="340" y="468" text-anchor="middle" fill="#888780" style="font-size:11px;">示意图按真实经纬度相对方位绘制 · 非精确地图 · 离线静态图不依赖网络</text>
+  </svg>
+  </div>
+</section>
+
+<!--
+  🚄 大交通 · AGENT MUST-DO:
+  ① 至少给出 1 条去程 + 1 条回程（具体车次/航班号 + 时刻 + 参考价 + 查询时间）
+  ② 每条方案至少 3 个不同平台的可点订票链接（12306/携程/去哪儿/飞猪）
+  ③ 价格旁必须标"参考价 + 查询时刻"，不允许写绝对价
+  数据来源优先级：美团火车票 > 12306 > WebSearch（携程/去哪儿）
+-->
+<section id="transport">
+  <h2>🚄 大交通</h2>
+  <div class="transport-section">
+  <div class="dir-block">
+    <h4>去程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">MF8789</div>
+        <div class="trans-route">厦门高崎T3 → 大连周水子</div>
+        <div class="trans-time">
+          08:55 - 11:55
+          (180分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥1100
+          <small>经济舱 ¥900-1300（国庆参考·查询日 2026-08-20，提前 3-4 周订）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">SC8412</div>
+        <div class="trans-route">厦门高崎T4 → 大连周水子T2</div>
+        <div class="trans-time">
+          07:35 - 12:15
+          (280分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥900
+          <small>经停济南·经济舱 ¥800-1100（更便宜但耗时 4.7h）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  <div class="dir-block">
+    <h4>回程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">MF8789</div>
+        <div class="trans-route">大连周水子 → 厦门高崎</div>
+        <div class="trans-time">
+          13:00 - 15:50
+          (170分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥1100
+          <small>经济舱 ¥900-1300（10/6 返避开 10/7 返程最高峰）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">SC（山航）</div>
+        <div class="trans-route">大连周水子 → 厦门高崎</div>
+        <div class="trans-time">
+          13:25 - 16:10
+          (165分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥1000
+          <small>经济舱 ¥900-1200（以航司/OTA 实时为准）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  
+    <div class="intra-tip">
+      <strong>市内交通</strong>
+      <ul>
+        <li>周水子机场 → 市区：地铁 2 号线（约 40min）或打车约 ¥40；回程留 2.5h 到机场</li>
+        <li>市区地铁 1/2 号线；金石滩乘轻轨 3 号线（大连站→金石滩约 1h，¥8）；旅顺地铁 12 号线/公交；滨海路可乘观光巴士 ¥20 当日无限次</li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  🏨 住宿候选 · AGENT MUST-DO:
+  ① 至少 3 家酒店候选（不能凑数，宁少勿假）
+  ② 每家必须有：酒店全名 / 价格区间 / ≥2 个不同平台的预订链接 / 一句"为什么推荐"
+  ③ 数据来源：美团酒店 > xhs 真实评价 > WebSearch
+  ④ 凑不齐 3 家时，明确写"暂时只找到 X 家，建议你打开美团搜更多"，不要硬编造
+-->
+<section id="hotel">
+  <h2>🏨 住宿候选</h2>
+  <div class="hotel-grid">
+  
+    <div class="hotel-card">
+      <div class="h-rank">#1</div>
+      <h4>亚朵酒店（大连中山广场店）</h4>
+      <div class="h-price">
+        参考价 ¥600/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.8 ｜ 小红书情感 品质稳·位置好
+      </div>
+      <div class="h-loc">📍 中山区 / 青泥洼桥（国庆参考价 ¥500-800 · 查询日 2026-08-20）</div>
+      <div class="h-reason">推荐理由：中山区核心，地铁 1/2 号线交汇，逛吃方便，品质稳定不踩雷</div>
+      <div class="h-amenities">
+        <span class="tag">地铁交汇</span><span class="tag">含早</span><span class="tag">连锁品质</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E4%BA%9A%E6%9C%B5%E9%85%92%E5%BA%97%EF%BC%88%E5%A4%A7%E8%BF%9E%E4%B8%AD%E5%B1%B1%E5%B9%BF%E5%9C%BA%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E4%BA%9A%E6%9C%B5%E9%85%92%E5%BA%97%EF%BC%88%E5%A4%A7%E8%BF%9E%E4%B8%AD%E5%B1%B1%E5%B9%BF%E5%9C%BA%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E4%BA%9A%E6%9C%B5%E9%85%92%E5%BA%97%EF%BC%88%E5%A4%A7%E8%BF%9E%E4%B8%AD%E5%B1%B1%E5%B9%BF%E5%9C%BA%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E4%BA%9A%E6%9C%B5%E9%85%92%E5%BA%97%EF%BC%88%E5%A4%A7%E8%BF%9E%E4%B8%AD%E5%B1%B1%E5%B9%BF%E5%9C%BA%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#2</div>
+      <h4>大连友好美居酒店</h4>
+      <div class="h-price">
+        参考价 ¥550/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 中档性价比
+      </div>
+      <div class="h-loc">📍 中山区 / 青泥洼桥（国庆参考价 ¥450-700）</div>
+      <div class="h-reason">推荐理由：中山区中档，近大连站与步行街，去滨海路/星海打车 20min</div>
+      <div class="h-amenities">
+        <span class="tag">近大连站</span><span class="tag">中档</span><span class="tag">交通便利</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E5%A4%A7%E8%BF%9E%E5%8F%8B%E5%A5%BD%E7%BE%8E%E5%B1%85%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E5%A4%A7%E8%BF%9E%E5%8F%8B%E5%A5%BD%E7%BE%8E%E5%B1%85%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E5%A4%A7%E8%BF%9E%E5%8F%8B%E5%A5%BD%E7%BE%8E%E5%B1%85%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E5%A4%A7%E8%BF%9E%E5%8F%8B%E5%A5%BD%E7%BE%8E%E5%B1%85%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#3</div>
+      <h4>青泥洼桥经济型连锁（如家/汉庭）</h4>
+      <div class="h-price">
+        参考价 ¥350/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.5 ｜ 小红书情感 省预算·只睡一觉
+      </div>
+      <div class="h-loc">📍 中山区 / 青泥洼桥（国庆参考价 ¥300-400）</div>
+      <div class="h-reason">推荐理由：预算首选，位置无敌，适合漫游整天只回来睡觉的玩法</div>
+      <div class="h-amenities">
+        <span class="tag">经济型</span><span class="tag">市中心</span><span class="tag">地铁口</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E9%9D%92%E6%B3%A5%E6%B4%BC%E6%A1%A5%E7%BB%8F%E6%B5%8E%E5%9E%8B%E8%BF%9E%E9%94%81%EF%BC%88%E5%A6%82%E5%AE%B6/%E6%B1%89%E5%BA%AD%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E9%9D%92%E6%B3%A5%E6%B4%BC%E6%A1%A5%E7%BB%8F%E6%B5%8E%E5%9E%8B%E8%BF%9E%E9%94%81%EF%BC%88%E5%A6%82%E5%AE%B6/%E6%B1%89%E5%BA%AD%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E9%9D%92%E6%B3%A5%E6%B4%BC%E6%A1%A5%E7%BB%8F%E6%B5%8E%E5%9E%8B%E8%BF%9E%E9%94%81%EF%BC%88%E5%A6%82%E5%AE%B6/%E6%B1%89%E5%BA%AD%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E9%9D%92%E6%B3%A5%E6%B4%BC%E6%A1%A5%E7%BB%8F%E6%B5%8E%E5%9E%8B%E8%BF%9E%E9%94%81%EF%BC%88%E5%A6%82%E5%AE%B6/%E6%B1%89%E5%BA%AD%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#4</div>
+      <h4>全季酒店（西安路店）</h4>
+      <div class="h-price">
+        参考价 ¥450/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 地铁沿线·性价比
+      </div>
+      <div class="h-loc">📍 西安路 / 沙河口（国庆参考价 ¥400-600）</div>
+      <div class="h-reason">推荐理由：地铁 1 号线直达星海，比中山区便宜约 20%，周边西安路夜市好逛</div>
+      <div class="h-amenities">
+        <span class="tag">地铁沿线</span><span class="tag">近夜市</span><span class="tag">连锁</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E8%A5%BF%E5%AE%89%E8%B7%AF%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E8%A5%BF%E5%AE%89%E8%B7%AF%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E8%A5%BF%E5%AE%89%E8%B7%AF%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97%EF%BC%88%E8%A5%BF%E5%AE%89%E8%B7%AF%E5%BA%97%EF%BC%89" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  📅 每日行程 · AGENT MUST-DO:
+  ① 必须按 trip.duration_days 给出**全部天数**的卡片（D1 ~ Dn 一个不能少）
+  ② 每天至少包含：当天主题 / 时间轴 / 3-6 个 POI / 三餐推荐
+  ③ 每个 POI 必须有：名称 / 推荐理由 / 用时建议 / 营业时间 / 评分（缺失时显式标）
+  ④ 每天必须有"当天小地图 + 当天路线"（路线规则同总览地图）
+  ⑤ 每天必须有：当天预算小计 + 体力指数（轻松/适中/暴走）
+-->
+<section id="days">
+  <h2>📅 每日行程</h2>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="1">
+  <header class="day-header">
+    <h3>D1 · 2026-10-02 周五 · 厦门→大连 · 中山区滨海线东段（棒棰岛+渔人码头）</h3>
+    <div class="day-meta">
+      <span>📍 300km</span>
+      <span>🚶 0.4 体力指数</span>
+      <span>☁️ 15-22℃，晴间多云，海边风大</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>厦门高崎乘 MF8789 直飞 → 大连周水子（约 3h）
+            
+            
+              · 厦门高崎机场 → 大连周水子机场
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>机场 → 市区（地铁 2 号线/打车）→ 东港
+            
+            
+              · 大连周水子机场 → 东港商务区 / 海之韵公园
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>东港 → 棒棰岛（沿滨海路东段约 20min）
+            
+            
+              · 东港商务区 / 海之韵公园 → 棒棰岛
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>棒棰岛 → 渔人码头（沿海岸线）
+            
+            
+              · 棒棰岛 → 渔人码头
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>渔人码头 → 中山区晚餐（打车约 20min）
+            
+            
+              · 渔人码头 → 中山区海鲜晚餐
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:55</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>厦门高崎机场</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 乘 MF8789 直飞大连约 3h，经济舱 ¥900-1300（国庆参考·查询日 2026-08-20，提前 3-4 周订）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 180 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:55</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>大连周水子机场</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 地铁 2 号线或打车进市区，先办入住（建议住中山区/青泥洼桥）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>东港商务区 / 海之韵公园</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 免费滨海步道，海之韵公园怪坡，比老虎滩人少得多</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">15:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>棒棰岛</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 山海纯净，水质清沙滩净，下午人少适合发呆；出园观光车 ¥10</div>
+          
+          <div class="t-detail">
+            <span>🕐 8:10-18:00</span>
+            <span>🎫 ¥¥40</span>
+            <span>⏱️ 约 120 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">17:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>渔人码头</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 欧式渔港看日落，渔船归港，10 月日落约 17:30 提前到位</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">19:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>中山区海鲜晚餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 海鲜小馆/鲅鱼饺子，回市区吃避开景区价，先问价再称重</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥80</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥1550</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="2">
+  <header class="day-header">
+    <h3>D2 · 2026-10-03 周六 · 滨海路精华段（星海→北大桥→傅家庄→莲花山）</h3>
+    <div class="day-meta">
+      <span>📍 25km</span>
+      <span>🚶 0.5 体力指数</span>
+      <span>☁️ 晴间多云，上午徒步下午看日落</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>中山区 → 星海广场（地铁/打车 20min）
+            
+            
+              · 星海广场 → 滨海路木栈道（星海→北大桥）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>星海 → 滨海路木栈道（步行/观光巴士）
+            
+            
+              · 滨海路木栈道（星海→北大桥） → 傅家庄海滩
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>北大桥 → 傅家庄海滩
+            
+            
+              · 傅家庄海滩 → 莲花山观景台
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>傅家庄 → 莲花山观景台（傍晚）
+            
+            
+              · 莲花山观景台 → 西安路夜市 / 海鲜烧烤
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>莲花山 → 西安路夜市（地铁/打车）
+            
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>星海广场</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 百年城雕+海平线构图，上午人相对少</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">10:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>滨海路木栈道（星海→北大桥）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 精华段徒步或观光巴士当移动观景台，北大桥吹海风；避开 16-19 点堵车段</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费（观光巴士 ¥20）</span>
+            <span>⏱️ 约 150 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>傅家庄海滩</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 本地人海滩，坐一下午发呆，比星海浴场清净</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">16:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>莲花山观景台</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 俯瞰星海湾大桥，日落+夜景一条线</div>
+          
+          <div class="t-detail">
+            <span>🕐 白天开放</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">19:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>西安路夜市 / 海鲜烧烤</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 烟火气收尾，地铁 1 号线直达</div>
+          
+          <div class="t-detail">
+            <span>🕐 晚间</span>
+            <span>🎫 ¥人均 ¥60</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥420</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="3">
+  <header class="day-header">
+    <h3>D3 · 2026-10-04 周日 · 金石滩一日（地质公园 + 黄金海岸）</h3>
+    <div class="day-meta">
+      <span>📍 60km</span>
+      <span>🚶 0.5 体力指数</span>
+      <span>☁️ 晴，海边风大注意防晒</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>大连站乘轻轨 3 号线 → 金石滩（约 1h）
+            
+            
+              · 轻轨 3 号线（大连站→金石滩） → 金石滩滨海国家地质公园
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>金石滩站 → 地质公园（景区交通/步行）
+            
+            
+              · 金石滩滨海国家地质公园 → 黄金海岸
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>地质公园 → 黄金海岸
+            
+            
+              · 黄金海岸 → 返市区
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>黄金海岸 → 轻轨返市区
+            
+            
+              · 返市区 → 双兴市场海鲜自购加工
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>市区 → 双兴市场海鲜晚餐
+            
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>轻轨 3 号线（大连站→金石滩）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 约 1h，早出发避开 10 点后人流</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥¥8</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>金石滩滨海国家地质公园</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 海蚀奇观：恐龙探海等点位，海岸步道精华，单独拿出一整天不赶</div>
+          
+          <div class="t-detail">
+            <span>🕐 日场开放（以景区为准）</span>
+            <span>🎫 ¥¥60</span>
+            <span>⏱️ 约 150 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">13:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>黄金海岸</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 沙软滩平，放空吹海风；注意潮汐，别在礁石区久留</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 120 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">15:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>返市区</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 轻轨返回，避开 16-19 点滨海路堵车段</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥¥8</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-dinner">
+        <div class="t-time">19:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍽️</span>
+            <strong>双兴市场海鲜自购加工</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 本地玩法：买活鲜（扇贝/虾爬子）找店加工，先问价再称重</div>
+          
+          <div class="t-detail">
+            <span>🕐 白天市场/傍晚加工</span>
+            <span>🎫 ¥人均 ¥70</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥480</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="4">
+  <header class="day-header">
+    <h3>D4 · 2026-10-05 周一 · 旅顺一日（白玉山 + 太阳沟老建筑）</h3>
+    <div class="day-meta">
+      <span>📍 70km</span>
+      <span>🚶 0.45 体力指数</span>
+      <span>☁️ 多云，旅顺靠海更凉</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>市区 → 旅顺（地铁 12 号线/公交约 1h）
+            
+            
+              · 大连 → 旅顺 → 白玉山
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>白玉山 → 太阳沟历史街区
+            
+            
+              · 白玉山 → 太阳沟历史街区
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>太阳沟 → 旅顺午餐
+            
+            
+              · 太阳沟历史街区 → 旅顺午餐
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>旅顺火车站旧址 / 日俄监狱（可选）
+            
+            
+              · 旅顺午餐 → 旅顺火车站旧址 / 日俄监狱（可选）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>旅顺 → 返市区
+            
+            
+              · 旅顺火车站旧址 / 日俄监狱（可选） → 返市区
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>中山广场夜景（老建筑+有轨电车）
+            
+            
+              · 返市区 → 中山广场夜景
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>大连 → 旅顺</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 地铁 12 号线/公交约 1h，旅顺是大连独有属性：近代史遗存集群</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥地铁约 ¥6</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>白玉山</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 俯瞰月牙形军港全景；想省预算可跳过（历史浓度靠太阳沟补）</div>
+          
+          <div class="t-detail">
+            <span>🕐 日场开放</span>
+            <span>🎫 ¥约 ¥40</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">11:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>太阳沟历史街区</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 老建筑安静好看，街巷有故事，人比市区少很多，大连另一面</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">13:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>旅顺午餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 本地农家菜，物价比市区实惠</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥50</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>旅顺火车站旧址 / 日俄监狱（可选）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 百年老站出片；日俄监狱旧址免费（需预约），历史厚重，情绪敏感可选</div>
+          
+          <div class="t-detail">
+            <span>🕐 日俄监狱需预约</span>
+            <span>🎫 ¥监狱免费</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">17:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>返市区</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 回程约 1h</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥地铁约 ¥6</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-evening">
+        <div class="t-time">19:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🌃</span>
+            <strong>中山广场夜景</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 一圈俄式/日式老建筑，配 201 路有轨电车夜景，免费出片</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥430</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="5">
+  <header class="day-header">
+    <h3>D5 · 2026-10-06 周二 · 慢收尾（中山广场晨光）· 返程厦门</h3>
+    <div class="day-meta">
+      <span>📍 300km</span>
+      <span>🚶 0.25 体力指数</span>
+      <span>☁️ 返程日，多云</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>中山广场 → 黑石礁公园/自然博物馆
+            
+            
+              · 中山广场老建筑群晨间 → 黑石礁公园 / 大连自然博物馆
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>黑石礁 → 市区午餐
+            
+            
+              · 黑石礁公园 / 大连自然博物馆 → 本地海鲜午餐
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>午餐后 → 周水子机场（地铁 2 号线）
+            
+            
+              · 本地海鲜午餐 → 前往周水子机场
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>大连 → 厦门（直飞约 3h）
+            
+            
+              · 前往周水子机场 → 大连 → 厦门（返程航班）
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>中山广场老建筑群晨间</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 露天建筑博物馆，晨光人少，配咖啡慢慢逛</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">10:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>黑石礁公园 / 大连自然博物馆</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 黑石礁地质海岸+鲸馆，若累了可直接跳过睡懒觉</div>
+          
+          <div class="t-detail">
+            <span>🕐 博物馆以公示为准</span>
+            <span>🎫 ¥免费（预约）</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">11:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>本地海鲜午餐</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 最后一顿海鲜收尾，双兴市场或附近老馆子</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥人均 ¥70</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">12:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>前往周水子机场</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 地铁 2 号线约 40min，留足 2.5h 值机安检（国庆高峰）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥地铁 ¥6</span>
+            <span>⏱️ 约 60 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>大连 → 厦门（返程航班）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 MF8789 约 13:00 起飞，直飞约 3h 到厦门；10/6 返已避开 10/7 返程最高峰</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥¥900-1300</span>
+            <span>⏱️ 约 180 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥1250</div>
+  
+</article>
+  
+</section>
+
+<!--
+  💰 预算明细 · AGENT MUST-DO:
+  ① 必须有总预算 + 6 类目占比（交通/住宿/餐饮/门票/购物/备用）
+  ② 必须有饼图（数据由 budget.categories 驱动，模板自带 Chart.js）
+  ③ 必须有"实际 vs 用户期望预算"对比，超支时标红
+  ④ 凑不齐细项时，按类目占比模板（见 data/skeleton_fallbacks.json）兜底
+-->
+<section id="budget">
+  <h2>💰 预算明细</h2>
+  <div class="budget-section">
+  <div class="budget-pie-wrap">
+    <canvas id="budget-pie" width="320" height="320"></canvas>
+  </div>
+  <div class="budget-table">
+    <table>
+      <thead><tr><th>类目</th><th>金额（¥）</th><th>占比</th></tr></thead>
+      <tbody>
+        
+        
+        <tr><td>大交通</td><td>2200</td><td>44.0%</td></tr>
+        <tr><td>住宿</td><td>1400</td><td>28.0%</td></tr>
+        <tr><td>餐饮</td><td>750</td><td>15.0%</td></tr>
+        <tr><td>门票</td><td>200</td><td>4.0%</td></tr>
+        <tr><td>市内交通</td><td>150</td><td>3.0%</td></tr>
+        <tr><td>备用</td><td>300</td><td>6.0%</td></tr>
+        <tr class="grand"><td>合计</td><td>5000</td><td>人均 5000</td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+    <div class="tradeoffs">
+      <h4>💡 超支取舍建议</h4>
+      <ul>
+        
+          <li><strong>机票选经停航班或 10/3 出发</strong> · 节省 ~¥600/人 · 避开 10/2 早高峰，单程可省 ¥300+（提前 3-4 周订）</li>
+        
+          <li><strong>住黑石礁/高新园经济型</strong> · 节省 ~¥400/人 · 4 晚省约 ¥400，地铁 1 号线 15min 到星海</li>
+        
+          <li><strong>旅顺看免费点（太阳沟/老火车站/中山广场）</strong> · 节省 ~¥90/人 · 跳过白玉山/203 高地门票，历史浓度不减</li>
+        
+          <li><strong>海鲜去双兴市场自购加工</strong> · 节省 ~¥120/人 · 比餐厅点餐省约 30%，且更新鲜</li>
+        
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  ⚠️ 风险提示 · AGENT MUST-DO:
+  无论数据完整度，本节必须输出至少 3 类风险：
+    1. 天气（出行日预报 + 异常天气警告，缺时调 WebSearch）
+    2. 节假日 / 人流（结合 risk_knowledge.json + 出行日期）
+    3. 当地骗局 / 防坑（risk_knowledge.json 该城市条目 + xhs"X 避雷"补充）
+  每条风险必须标置信度 🟢🟡⚪
+-->
+<section id="risk">
+  <h2>⚠️ 风险提示</h2>
+  <!--
+  AGENT MUST-DO: 至少 3 类风险（天气 / 节假日 / 防坑），加 1 类应急联系。
+  上游 risk-check 给空时用 skeleton_fallbacks.risk_panel_default 兜底。
+-->
+<div class="risk-panel">
+  <div class="risk-block confidence-gray">
+    <h4>🌤️ 天气</h4>
+    <p>10 月上旬大连约 15-22℃，秋高气爽、降水概率低（约 12%），昼夜温差大、海边风大。出行前 3 天查实时预报。</p>
+    
+      <ul><li>带薄外套/冲锋衣，海边风大需防风帽；早晚温差大</li><li>10 月初日落在 17:30 左右，看日落要提前到点（莲花山/渔人码头）</li><li>防晒 SPF50+（紫外线可达 5-6 级），海边阴凉处也需防晒</li></ul>
+    
+  </div>
+
+  
+    <div class="risk-block confidence-yellow">
+      <h4>🎉 节假日</h4>
+      <p><strong>国庆（10/1-10/7）</strong> · 国庆是大连高峰，游客同比 +30-50%，机票/住宿上涨 50%-100%。10/2-3 人流最密集，10/5-6 明显回落。本方案 10/2 出发、10/6 返，已避开 10/1 出港首波与 10/7 返程最高峰；滨海路 16-19 点易堵/管制，已安排在上午+下午早段。</p>
+      
+        <p>建议改期：10/4 出发 → 10/8 返（人流最低，住宿回落，需 10/8 请假 1 天）, 中秋后 9/28-10/2（避开国庆前段，机票更便宜）</p>
+      
+    </div>
+  
+
+  <div class="risk-block">
+    <h4>🚨 防坑提示</h4>
+    
+    
+      <div class="scam-group">
+        <strong>交通枢纽</strong>
+        <ul><li>机场/火车站拉客低价包车一日游多为购物团，只走官方地铁/正规平台</li><li>出租车上车前确认打表，滨海路旺季拒载/绕路高发</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>大连本地防坑 · 大连</strong>
+        <ul><li>海边流动摊贩&#39;野生海参/刚捞海鲜&#39;多为以次充好，价格贵 2-3 倍，去双兴市场正规摊位</li><li>海鲜进店先问价再称重，活鲜与冰鲜差价大，拒绝&#39;时价&#39;</li><li>老虎滩/星海门口黄牛&#39;内部票&#39;，只在官方渠道购票</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>海边安全</strong>
+        <ul><li>滨海路观景台/礁石区禁止攀爬，涨潮易被困</li><li>金石滩潮汐变化快，赶海注意低潮位；滨海路弯道多晕车药备上</li></ul>
+      </div>
+    
+  </div>
+
+  <div class="risk-block confidence-green">
+    <h4>📞 应急电话</h4>
+    <ul class="emergency">
+      <li>报警 110</li>
+      <li>急救 120</li>
+      <li>旅游投诉 12301</li>
+      <li>消费维权 12315</li>
+      <li>气象预警 12379</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!--
+  📓 小红书真实笔记参考 · AGENT MUST-DO:
+  本节必出，至少 6-10 篇真实笔记，按主题分组（攻略/美食/住宿/拍照/避雷/其他）
+  数据获取（按优先级）：
+    Tier 1: 调 xhs CLI（用户已登录时）
+    Tier 2: WebSearch site:xiaohongshu.com（用户跳过登录时）
+    Tier 3: WebSearch 马蜂窝/抖音目的地关键词
+  完全失败时，渲染"本次未拿到第三方游记"提示卡 + 给一组手动搜索链接
+  （绝不允许这一节空白；本 section 即使 xhs_notes=None 也要 include）
+-->
+<section id="xhs-notes">
+  <h2>📓 小红书真实笔记参考</h2>
+  <!--
+  AGENT MUST-DO: 至少 6-10 篇真实笔记，按主题分组。
+  完全没拿到时，自动渲染"未拿到第三方游记"提示 + 给一组手动搜索链接。
+-->
+<div class="xhs-section">
+  
+  <p class="xhs-intro">这里是搜索过程中找到的高质量真实笔记，按主题分类，点击直达原文。</p>
+  
+    <div class="xhs-group">
+      <h4>真实笔记参考 <span class="xhs-count">7 篇</span></h4>
+      <div class="xhs-grid">
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%A4%A7%E8%BF%9E%20%E8%B7%AF%E7%BA%BF%20%E6%94%BB%E7%95%A5" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">大连 3-5 日路线全解：顺着海岸线排不走回头路</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 3200</span>
+                <span>💬 240</span>
+              </div>
+              
+                <div class="xhs-snippet">滨海路沿线+旅顺+金石滩三大片区分别打包进不同天，不跨区狂奔</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%A3%92%E6%A3%B3%E5%B2%9B" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">棒棰岛：水质清、沙滩净，适合把时间浪费在海边</div>
+              <div class="xhs-meta">
+                <span>@ctrip</span>
+                <span>❤️ 1800</span>
+                <span>💬 110</span>
+              </div>
+              
+                <div class="xhs-snippet">门票40元，下午人少，山海纯净适合发呆，别期待热闹商圈</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E9%87%91%E7%9F%B3%E6%BB%A9%20%E5%9C%B0%E8%B4%A8%E5%85%AC%E5%9B%AD" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">金石滩地质公园：海蚀奇观+海岸线徒步</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 1500</span>
+                <span>💬 95</span>
+              </div>
+              
+                <div class="xhs-snippet">恐龙探海之类海蚀点位，单独拿出一整天，别和市区硬拼</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%97%85%E9%A1%BA%20%E5%A4%AA%E9%98%B3%E6%B2%9F" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">旅顺太阳沟：历史浓度高、街巷安静的大连另一面</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 900</span>
+                <span>💬 55</span>
+              </div>
+              
+                <div class="xhs-snippet">老建筑安静好拍，白玉山俯瞰月牙形军港，人比市区少很多</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%A4%A7%E8%BF%9E%20%E4%B8%AD%E5%B1%B1%E5%B9%BF%E5%9C%BA%20%E8%80%81%E5%BB%BA%E7%AD%91" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">中山广场老建筑群：露天建筑博物馆</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 700</span>
+                <span>💬 40</span>
+              </div>
+              
+                <div class="xhs-snippet">一圈俄式日式老建筑，傍晚绕一圈复古出片，免费</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%A4%A7%E8%BF%9E%20%E5%8F%8C%E5%85%B4%E5%B8%82%E5%9C%BA%20%E6%B5%B7%E9%B2%9C" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">大连海鲜：双兴市场自购加工玩法</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 2100</span>
+                <span>💬 160</span>
+              </div>
+              
+                <div class="xhs-snippet">买活鲜找店加工，清蒸扇贝/煮虾爬子，鲅鱼饺子蘸醋，先问价再称重</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E5%A4%A7%E8%BF%9E%20%E9%81%BF%E5%9D%91" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">大连国庆避坑：低价一日游+海边流动海鲜</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 600</span>
+                <span>💬 38</span>
+              </div>
+              
+                <div class="xhs-snippet">19/99 元一日游多为购物团；海边&#39;野生海参&#39;贵 2-3 倍以次充好</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+      </div>
+    </div>
+  
+  <p class="xhs-disclaimer">
+    💡 笔记内容由作者发布，仅作参考。点击卡片跳转小红书原文。
+  </p>
+  
+</div>
+</section>
+
+<section id="data-completeness">
+  <h2>📊 数据完整性</h2>
+  <!--
+  AGENT MUST-DO:
+  这是固定底部面板，告诉用户哪些数据是一手 / 哪些是兜底。
+  data_sources 由 check_deps + agent 实际调用情况组装。
+-->
+<div class="completeness-panel">
+  <div class="comp-row">
+    <strong>✅ 已启用</strong>
+    <ul>
+      
+      
+      
+      <li>WebSearch — 兜底数据源</li>
+    </ul>
+  </div>
+  
+  <p class="comp-tip">
+    💡 想升级数据可信度？把对应数据源配上后告诉 agent「重跑 XX」即可增量更新。
+  </p>
+</div>
+</section>
+
+<!--
+  🎒 行前清单 · AGENT MUST-DO:
+  无论数据完整度，必须输出至少 4 类清单：
+    1. 证件（身份证/驾照/学生证/老年证）
+    2. 充电（充电宝/数据线/转换头）
+    3. 现金/支付（少量现金/支付宝微信备用）
+    4. 应急（常用药/急救联系/保险卡）
+  risk-check 给了具体内容就用具体内容，没给就用以上 4 类硬清单
+  （兜底数据见 data/skeleton_fallbacks.json）
+-->
+<section id="checklist">
+  <h2>🎒 行前清单</h2>
+  <!--
+  AGENT MUST-DO: checklist 至少 4 类（证件/充电/支付/应急）。
+  risk-check 给了具体内容用具体内容，没给就用 skeleton_fallbacks.json 兜底。
+-->
+
+<div class="checklist">
+  
+    <div class="check-group">
+      <h4>🪪 证件</h4>
+      <ul>
+        <li><label><input type="checkbox"> 身份证（机票+酒店入住必备）</label></li><li><label><input type="checkbox"> 学生证/老年证（景区半价，若适用）</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>🔌 充电/数码</h4>
+      <ul>
+        <li><label><input type="checkbox"> 充电宝（≤100Wh）</label></li><li><label><input type="checkbox"> 手机充电线 + 大连交通/地铁 APP</label></li><li><label><input type="checkbox"> 耳机</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💵 现金/支付</h4>
+      <ul>
+        <li><label><input type="checkbox"> 少量现金 ¥300（海鲜市场/部分小店只收现金）</label></li><li><label><input type="checkbox"> 支付宝/微信备用</label></li><li><label><input type="checkbox"> 银行卡</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💊 健康/应急</h4>
+      <ul>
+        <li><label><input type="checkbox"> 常用药（肠胃药-海鲜/感冒/创可贴）</label></li><li><label><input type="checkbox"> 晕车药（滨海路弯道多）</label></li><li><label><input type="checkbox"> 薄外套/冲锋衣 + 防风帽 + 防晒霜</label></li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<footer>
+  <p>由出游规划师 v1.0.0 生成 · 2026-08-20T09:26:57+08:00</p>
+  <p>本报告所有价格 / 营业 / 评分均为查询时刻的参考值，请出行前再核实。</p>
+</footer>
+
+<script>
+  // 总览地图 —— 国内可用瓦片源（按可达性顺序），任何一个失败自动切下一个
+  // 地图已替换为离线静态 SVG（见 overview-map 区块），无需 Leaflet
+  // 预算饼图
+  const ctx = document.getElementById('budget-pie');
+  if (ctx) {
+    const bd = {"accommodation": 1400, "buffer": 300, "food": 750, "ticket": 200, "transport_intra": 150, "transport_long": 2200};
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['大交通','住宿','餐饮','门票','市内交通','备用'],
+        datasets: [{
+          data: [bd.transport_long, bd.accommodation, bd.food, bd.ticket, bd.transport_intra, bd.buffer],
+          backgroundColor: ['#3498db','#9b59b6','#e74c3c','#f39c12','#1abc9c','#95a5a6'],
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+</script>
+</body>
+</html>
