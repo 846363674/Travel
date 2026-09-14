@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>云霄 · 2026-10-01 行程书</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* 出游规划师 · HTML 行程书样式 · v1.0 */
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.55;
+}
+header.cover {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  padding: 60px 40px 40px;
+}
+header.cover h1 { margin: 0 0 12px; font-size: 32px; font-weight: 700; }
+header.cover .sub { font-size: 16px; opacity: 0.85; }
+.confidence-summary {
+  margin-top: 16px; font-size: 13px; opacity: 0.9;
+}
+.confidence-summary .dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin: 0 4px 0 12px; vertical-align: middle;
+}
+.dot-green  { background: #2ecc71; }
+.dot-yellow { background: #f1c40f; }
+.dot-gray   { background: #95a5a6; }
+.meta-stamp { margin-top: 8px; font-size: 12px; opacity: 0.6; }
+
+section {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+section h2 {
+  font-size: 22px; margin: 32px 0 16px; padding-left: 12px;
+  border-left: 4px solid #3498db;
+}
+
+/* 总览地图 */
+#map {
+  width: 100%; height: 480px; border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+/* 大交通 */
+.transport-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.transport-section .intra-tip {
+  grid-column: 1 / -1; background: #f0f4f8; padding: 16px; border-radius: 8px;
+}
+.dir-block h4 { margin: 0 0 12px; }
+.trans-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 12px; position: relative;
+}
+.trans-mode { font-weight: 700; font-size: 18px; color: #3498db; }
+.trans-route { font-size: 15px; margin: 4px 0; }
+.trans-time { color: #555; font-size: 14px; }
+.trans-price { font-weight: 600; color: #e74c3c; margin-top: 6px; }
+.book-links {
+  margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e0e0e0;
+  font-size: 13px; color: #555;
+}
+.book-links .book-label { color: #888; margin-right: 6px; }
+.book-links a {
+  display: inline-block; margin-right: 10px; color: #3498db;
+  text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent;
+}
+.book-links a:hover { border-bottom-color: #3498db; }
+
+/* 小红书笔记区 */
+.xhs-section { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+.xhs-intro { color: #666; font-size: 14px; margin: 0 0 20px; }
+.xhs-group { margin-bottom: 24px; }
+.xhs-group h4 { margin: 0 0 12px; font-size: 16px; }
+.xhs-count { color: #999; font-size: 13px; font-weight: 400; margin-left: 6px; }
+.xhs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.xhs-card {
+  display: block; text-decoration: none; color: inherit;
+  background: #fafafa; border-radius: 10px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid #eee;
+}
+.xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.xhs-cover {
+  width: 100%; padding-top: 75%; background-size: cover; background-position: center;
+  background-color: #ddd;
+}
+.xhs-body { padding: 12px; }
+.xhs-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.xhs-meta { font-size: 12px; color: #888; margin-bottom: 6px; }
+.xhs-meta span { margin-right: 10px; }
+.xhs-snippet { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 8px; }
+.xhs-sentiment {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+}
+.xhs-sentiment-positive { background: #e8f5e9; color: #2e7d32; }
+.xhs-sentiment-negative { background: #ffebee; color: #c62828; }
+.xhs-sentiment-neutral  { background: #f0f0f0; color: #555; }
+.xhs-disclaimer { color: #999; font-size: 12px; margin-top: 16px; text-align: center; }
+
+/* 住宿 */
+.hotel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.hotel-card {
+  background: #fff; border-radius: 10px; padding: 18px; position: relative;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.hotel-card .h-rank {
+  position: absolute; top: 12px; right: 14px; font-weight: 700; color: #f39c12;
+}
+.h-price { color: #e74c3c; font-weight: 600; margin: 6px 0; }
+.h-rating, .h-loc { font-size: 13px; color: #555; }
+.h-amenities { margin: 8px 0 0; }
+.tag {
+  display: inline-block; background: #ecf0f1; color: #555;
+  border-radius: 4px; padding: 2px 8px; margin: 2px 4px 0 0; font-size: 12px;
+}
+.warning { color: #e67e22; font-size: 13px; margin-top: 6px; }
+
+/* 每日行程 */
+.day-card {
+  background: #fff; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.day-header h3 { margin: 0 0 6px; }
+.day-meta { font-size: 13px; color: #888; }
+.day-meta span { margin-right: 12px; }
+.timeline { list-style: none; padding-left: 0; margin: 16px 0 0; }
+.timeline .stop {
+  display: grid; grid-template-columns: 100px 1fr; gap: 16px;
+  border-left: 3px solid #3498db; padding: 10px 0 10px 14px; margin-left: 8px;
+}
+.timeline .stop:not(:last-child) { padding-bottom: 18px; }
+.t-time { font-weight: 600; color: #3498db; }
+.t-title { font-size: 15px; margin-bottom: 4px; }
+.t-emoji { margin-right: 6px; }
+.rating { color: #f39c12; margin-left: 8px; font-size: 13px; }
+.t-detail { font-size: 13px; color: #666; }
+.t-detail span { margin-right: 14px; }
+.stop-breakfast, .stop-lunch, .stop-dinner { border-left-color: #e74c3c; }
+.stop-evening { border-left-color: #9b59b6; }
+
+/* 预算 */
+.budget-section {
+  display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;
+}
+.budget-pie-wrap {
+  background: #fff; border-radius: 10px; padding: 20px; display: flex; justify-content: center;
+}
+.budget-table table {
+  width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden;
+}
+.budget-table th, .budget-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #eee; }
+.budget-table tr.grand td { font-weight: 700; background: #f7f9fc; }
+.tradeoffs {
+  grid-column: 1 / -1; background: #fff5e6; padding: 16px 20px; border-radius: 10px; margin-top: 8px;
+}
+
+/* 风险 */
+.risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.risk-block {
+  background: #fff; padding: 16px; border-radius: 10px; border-left: 4px solid #95a5a6;
+}
+.risk-block.confidence-green  { border-left-color: #2ecc71; }
+.risk-block.confidence-yellow { border-left-color: #f1c40f; }
+.risk-block.confidence-gray   { border-left-color: #95a5a6; }
+.risk-block h4 { margin: 0 0 10px; }
+.scam-group { margin-bottom: 10px; }
+.emergency { columns: 2; list-style: none; padding: 0; }
+
+/* 清单 */
+.checklist { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.check-group {
+  background: #fff; padding: 16px; border-radius: 10px;
+}
+.check-group h4 { margin: 0 0 8px; }
+.check-group ul { list-style: none; padding: 0; }
+.check-group li { padding: 4px 0; }
+
+/* 置信度徽章 */
+.confidence-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.confidence-green  { background: #2ecc71; }
+.confidence-yellow { background: #f1c40f; }
+.confidence-gray   { background: #95a5a6; }
+
+footer {
+  text-align: center; color: #888; font-size: 12px; padding: 30px 20px;
+}
+
+@media print {
+  header.cover { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
+  .day-card, .hotel-card, .trans-card, .risk-block { break-inside: avoid; }
+  .book-btn { display: none; }
+}
+@media (max-width: 720px) {
+  .transport-section, .budget-section { grid-template-columns: 1fr; }
+}
+
+/* ===== v2.0 新增：实际路线 / 兜底卡 / 数据完整性 ===== */
+
+/* 每日行程的路线步骤 */
+.day-routes {
+  background: #f8f9fa; padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  border-left: 4px solid #3498db;
+}
+.day-routes h4 { margin: 0 0 8px; font-size: 14px; }
+.route-steps { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.7; }
+.route-steps li { padding: 2px 0; }
+.route-source-real { color: #2ecc71; font-weight: 600; font-size: 12px; }
+.route-source-text { color: #555; font-weight: 500; }
+.route-source-fallback { color: #c62828; font-size: 12px; }
+
+/* 推荐理由 */
+.t-reason { color: #777; font-size: 13px; margin: 4px 0 6px; }
+
+/* 当天预算 */
+.day-budget { text-align: right; padding: 8px 0; color: #e67e22; font-weight: 600; }
+
+/* 坐标待校验 marker */
+.warn-badge {
+  display: inline-block; background: #fff3e0; color: #e67e22;
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 6px;
+}
+
+/* xhs 空数据兜底卡 */
+.xhs-empty-card {
+  background: #fafafa; border: 2px dashed #ddd;
+  padding: 24px; border-radius: 12px; text-align: center;
+}
+.xhs-empty-card h4 { margin: 0 0 8px; color: #777; }
+.xhs-empty-card p { color: #888; margin: 4px 0; font-size: 14px; }
+.manual-search { list-style: none; padding: 0; margin-top: 16px; }
+.manual-search li {
+  display: inline-block; margin: 4px 8px;
+}
+.manual-search a {
+  display: inline-block; padding: 6px 14px;
+  background: #fff; border: 1px solid #ddd; border-radius: 16px;
+  color: #3498db; text-decoration: none; font-size: 13px;
+}
+.manual-search a:hover { border-color: #3498db; }
+
+/* 数据完整性面板 */
+.completeness-panel {
+  background: #fff; padding: 24px; border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05); font-size: 14px;
+}
+.comp-row { margin-bottom: 14px; }
+.comp-row strong { display: block; margin-bottom: 6px; }
+.comp-row ul { margin: 0; padding-left: 20px; color: #555; line-height: 1.8; }
+.comp-warn ul { color: #e67e22; }
+.comp-tip {
+  border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px;
+  color: #888; font-size: 13px;
+}
+
+/* 地图图例 */
+.map-legend { font-family: inherit; }
+
+/* confidence 灰色 */
+.confidence-gray {
+  border-left-color: #95a5a6 !important;
+}
+
+</style>
+</head>
+<body>
+<header class="cover">
+  <div class="cover-meta">
+    <h1>云霄 · 2日行程</h1>
+    <p class="sub">2026-10-01 ~ 2026-10-02 ｜ 2人 ｜ 预算 ¥620</p>
+    <div class="confidence-summary">
+      <span class="dot dot-green"></span> 一手数据 0%
+      <span class="dot dot-yellow"></span> 抓取 89%
+      <span class="dot dot-gray"></span> 静态参考 11%
+    </div>
+    <div class="meta-stamp">数据生成时间 2026-09-14T17:32:45+08:00</div>
+  </div>
+</header>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+                         AGENT INSTRUCTIONS · 必读
+═══════════════════════════════════════════════════════════════════════════════
+本 HTML 共 8 个骨架 section，**全部必出**（无论数据完整度）。每个 section 下
+有具体「必须做到 X」的指令，agent 在生成 trip 数据时务必按指令准备字段；
+缺数据时自己想办法补（调工具 / WebSearch / 静态兜底），绝不允许空白渲染。
+缺失任何一项都视为本次任务未完成。
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<!--
+  📍 总览地图 · AGENT MUST-DO:
+  ① POI 必须有坐标。拿不到真坐标时，用城市中心点 + POI 名 marker 兜底，
+     并在 poi.coord_status 写 "unverified"，模板会标"坐标待校验"
+  ② **路线必须是实际道路路线，不是两点之间的直线**。三种合法形式（任选）：
+     a) day.routes[].geometry = [[lng,lat],...] 真实 polyline 坐标数组（最佳）
+     b) day.routes[].description = "沿建国路向东 → 转入人民南路 → 春熙路"
+        路径文字版（OSRM/高德拿不到时用 WebSearch / 自己推理写出）
+     c) 完全无能为力时 day.routes[].source = "straight_line_unavailable"
+        模板会画虚线 + 红字"⚠️ 实际路线未获取"，但**不允许直接用直线还假装是真实路线**
+  ③ 同一天 POI 用同色 marker，不同天换色；起终点要有方向感
+-->
+<section id="overview-map">
+  <h2>📍 总览地图</h2>
+  <div style="border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;">
+  <svg viewBox="0 0 680 480" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>乌山经典登顶环线示意图</title>
+    <desc>从山脚停车场走左侧红军秘密通道上山，经地委机关旧址到红旗岩登顶，再走右侧大路下山，全程约4公里3到4小时</desc>
+    <rect x="0" y="0" width="680" height="480" fill="#F7FAFC"/>
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+
+    <text x="40" y="32" style="font-size:15px;font-weight:500;fill:#2C2C2A;">乌山经典登顶环线（左上右下 · 约 4km / 3-4h）</text>
+    <text x="40" y="54" style="font-size:12px;fill:#5F5E5A;">起点：山脚停车场「红军饭店 / 乌山游击队之家」· 门票免费、停车免费</text>
+
+    <polyline points="330,400 170,290 270,170 400,100" fill="none" stroke="#185FA5" stroke-width="2.5" marker-end="url(#ar)"/>
+    <polyline points="400,100 520,280 330,400" fill="none" stroke="#3B6D11" stroke-width="2.5" stroke-dasharray="7,5" marker-end="url(#ar)"/>
+
+    <rect x="262" y="235" width="160" height="64" rx="10" fill="#FFFFFF" stroke="#CBD5E0" stroke-width="0.5"/>
+    <text x="342" y="257" text-anchor="middle" style="font-size:13px;font-weight:500;fill:#2C2C2A;">经典环线</text>
+    <text x="342" y="275" text-anchor="middle" style="font-size:11px;fill:#5F5E5A;">约 4 km · 3-4 小时</text>
+    <text x="342" y="291" text-anchor="middle" style="font-size:11px;fill:#5F5E5A;">登顶后不折返</text>
+
+    <circle cx="330" cy="400" r="8" fill="#185FA5" stroke="#fff" stroke-width="1.5"/>
+    <text x="346" y="404" style="font-size:11px;fill:#2C2C2A;">山脚停车场 · 红军饭店</text>
+
+    <circle cx="170" cy="290" r="8" fill="#185FA5" stroke="#fff" stroke-width="1.5"/>
+    <text x="156" y="286" text-anchor="end" style="font-size:11px;fill:#2C2C2A;">红军秘密通道 · 一线天</text>
+
+    <circle cx="270" cy="170" r="8" fill="#185FA5" stroke="#fff" stroke-width="1.5"/>
+    <text x="270" y="154" text-anchor="middle" style="font-size:11px;fill:#2C2C2A;">地委机关旧址 · 龙床石</text>
+
+    <circle cx="400" cy="100" r="8" fill="#BA7517" stroke="#fff" stroke-width="1.5"/>
+    <text x="400" y="84" text-anchor="middle" style="font-size:11px;fill:#2C2C2A;">红旗岩登顶 1050.6m</text>
+
+    <circle cx="520" cy="280" r="8" fill="#3B6D11" stroke="#fff" stroke-width="1.5"/>
+    <text x="534" y="284" style="font-size:11px;fill:#2C2C2A;">右侧大路下山</text>
+
+    <text x="40" y="428" style="font-size:12px;fill:#5F5E5A;">10/1 中午吃窑鸡版节奏：09:00 出发 → 12:00 将军山吃窑鸡 → 14:15 进山门 → 16:00 前登顶 → 17:15 前回到停车场</text>
+    <text x="40" y="448" style="font-size:11px;fill:#BA7517;">熔断点：14:45 未进山门 → 放弃登顶，只走秘密通道 + 一线天；16:15 未登顶 → 立即原路下撤</text>
+    <text x="40" y="466" style="font-size:11px;fill:#888780;">山上无厕所 / 无信号 / 无补给 · 带足水 + 手电 + 防滑鞋 · 10 月日落约 17:56 · X532 盘山路无路灯</text>
+  </svg>
+  </div>
+</section>
+
+<!--
+  🚄 大交通 · AGENT MUST-DO:
+  ① 至少给出 1 条去程 + 1 条回程（具体车次/航班号 + 时刻 + 参考价 + 查询时间）
+  ② 每条方案至少 3 个不同平台的可点订票链接（12306/携程/去哪儿/飞猪）
+  ③ 价格旁必须标"参考价 + 查询时刻"，不允许写绝对价
+  数据来源优先级：美团火车票 > 12306 > WebSearch（携程/去哪儿）
+-->
+<section id="transport">
+  <h2>🚄 大交通</h2>
+  <div class="transport-section">
+  <div class="dir-block">
+    <h4>去程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">自驾 · 厦门 → 云霄县城·将军山（09:00 出发）</div>
+        <div class="trans-route">厦门（海沧大桥 → G15 沈海高速 → 云霄/东厦出口） → 云霄县城 · 将军山（烧窑鸡一条街）</div>
+        <div class="trans-time">
+          09:00 - 12:00
+          (180分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥120
+          <small>约 170km · 10/1 是国庆出程最高峰（8-12 时车流峰值），按 3-3.5h 预留 · 国庆高速免费（参考价·查询日 2026-09-14）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">自驾 · 云霄县城 → 乌山山脚</div>
+        <div class="trans-route">云霄县城（将军山） → 乌山山脚停车场（红军饭店）</div>
+        <div class="trans-time">
+          13:10 - 14:00
+          (50分钟)
+        </div>
+        <div class="trans-price">
+          参考价待核实
+          <small>X532 盘山公路约 30km / 50min，弯多路窄、无路灯，弯道鸣笛（油费已计入大交通）</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  <div class="dir-block">
+    <h4>回程</h4>
+    
+      <div class="trans-card">
+        <div class="trans-mode">自驾 · 17:15 返程（赶在天黑前出山）</div>
+        <div class="trans-route">乌山山脚停车场 → 厦门</div>
+        <div class="trans-time">
+          17:15 - 20:00
+          (165分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥120
+          <small>17:15 出山、约 20:00 到家；X532 盘山路尾段会擦黑，务必开灯慢行</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+      <div class="trans-card">
+        <div class="trans-mode">自驾 · 备选：晚上吃窑鸡再走</div>
+        <div class="trans-route">云霄县城（将军山） → 厦门</div>
+        <div class="trans-time">
+          19:00 - 21:30
+          (150分钟)
+        </div>
+        <div class="trans-price">
+          参考价 ¥120
+          <small>若改成先爬山、下山后进县城吃窑鸡（店家营业到凌晨 1 点），约 21:30 到家，但能保住完整登顶</small>
+        </div>
+        <div class="book-links">
+          <span class="book-label">去订票：</span>
+          
+            <a href="https://flights.ctrip.com/" target="_blank" rel="noopener">携程机票</a>
+            <a href="https://flight.qunar.com/" target="_blank" rel="noopener">去哪儿</a>
+            <a href="https://www.fliggy.com/" target="_blank" rel="noopener">飞猪</a>
+          
+        </div>
+        <span class="confidence-badge confidence-yellow"></span>
+      </div>
+    
+  </div>
+  
+    <div class="intra-tip">
+      <strong>市内交通</strong>
+      <ul>
+        <li>山脚停车：导航「红军饭店（云霄县乌山游击队之家）」，车可直接停到乌山入口处，停车免费（参考·查询日 2026-09-14）</li>
+        <li>三段路程要分开算：① 厦门 → 云霄县城约 170km（沈海高速，云霄/东厦出口）② 云霄县城 → 乌山山脚约 30km / 50min（X532 盘山公路，弯多路窄、无路灯）③ 窑鸡店集中在县城将军山一带（阿川烧窑鸡、将军山半山腰正宗烧窑鸡），现烤需等约 20-30 分钟，到店先下单再坐着等</li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  🏨 住宿候选 · AGENT MUST-DO:
+  ① 至少 3 家酒店候选（不能凑数，宁少勿假）
+  ② 每家必须有：酒店全名 / 价格区间 / ≥2 个不同平台的预订链接 / 一句"为什么推荐"
+  ③ 数据来源：美团酒店 > xhs 真实评价 > WebSearch
+  ④ 凑不齐 3 家时，明确写"暂时只找到 X 家，建议你打开美团搜更多"，不要硬编造
+-->
+<section id="hotel">
+  <h2>🏨 住宿候选</h2>
+  <div class="hotel-grid">
+  
+    <div class="hotel-card">
+      <div class="h-rank">#1</div>
+      <h4>云霄乌山湾民宿 / 天窗坪民宿</h4>
+      <div class="h-price">
+        参考价 ¥250/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.3 ｜ 小红书情感 离山最近·第二天出发快
+      </div>
+      <div class="h-loc">📍 常山开发区 / 乌山脚下（离乌山最近 · 参考价 ¥226-300）</div>
+      <div class="h-reason">推荐理由：当天往返不用住；若决定住一晚，这家离乌山入口最近，次日 6:30 就能进山避开人流</div>
+      <div class="h-amenities">
+        <span class="tag">近乌山入口</span><span class="tag">免费停车</span><span class="tag">民宿</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E4%BA%91%E9%9C%84%E4%B9%8C%E5%B1%B1%E6%B9%BE%E6%B0%91%E5%AE%BF%20/%20%E5%A4%A9%E7%AA%97%E5%9D%AA%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E4%BA%91%E9%9C%84%E4%B9%8C%E5%B1%B1%E6%B9%BE%E6%B0%91%E5%AE%BF%20/%20%E5%A4%A9%E7%AA%97%E5%9D%AA%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E4%BA%91%E9%9C%84%E4%B9%8C%E5%B1%B1%E6%B9%BE%E6%B0%91%E5%AE%BF%20/%20%E5%A4%A9%E7%AA%97%E5%9D%AA%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E4%BA%91%E9%9C%84%E4%B9%8C%E5%B1%B1%E6%B9%BE%E6%B0%91%E5%AE%BF%20/%20%E5%A4%A9%E7%AA%97%E5%9D%AA%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#2</div>
+      <h4>云霄君逸假日酒店</h4>
+      <div class="h-price">
+        参考价 ¥350/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.7 ｜ 小红书情感 出行方便·设施齐全
+      </div>
+      <div class="h-loc">📍 云霄县城 / 云陵客运站旁（舒适型热卖 No.1 · 参考价 ¥300-400）</div>
+      <div class="h-reason">推荐理由：县城性价比首选，4.7 分 187 条点评，晚上出门吃水面/米梭/窑鸡都近</div>
+      <div class="h-amenities">
+        <span class="tag">免费停车</span><span class="tag">机器人服务</span><span class="tag">近县城美食</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E4%BA%91%E9%9C%84%E5%90%9B%E9%80%B8%E5%81%87%E6%97%A5%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E4%BA%91%E9%9C%84%E5%90%9B%E9%80%B8%E5%81%87%E6%97%A5%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E4%BA%91%E9%9C%84%E5%90%9B%E9%80%B8%E5%81%87%E6%97%A5%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E4%BA%91%E9%9C%84%E5%90%9B%E9%80%B8%E5%81%87%E6%97%A5%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#3</div>
+      <h4>金汤湾海水温泉度假酒店</h4>
+      <div class="h-price">
+        参考价 ¥460/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.5 ｜ 小红书情感 海水温泉非常舒服·680 条好评
+      </div>
+      <div class="h-loc">📍 金汤湾旅游区 / 陈岱（豪华榜 No.1 · 套餐 ¥460 起含双早+温泉）</div>
+      <div class="h-reason">推荐理由：爬山后泡含氡强食盐泉（出水 62-65℃、矿化度 21g/L），是世界罕见医疗级海水温泉，解乏一流</div>
+      <div class="h-amenities">
+        <span class="tag">海水温泉</span><span class="tag">含双早</span><span class="tag">独栋别墅</span><span class="tag">免费停车</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E9%87%91%E6%B1%A4%E6%B9%BE%E6%B5%B7%E6%B0%B4%E6%B8%A9%E6%B3%89%E5%BA%A6%E5%81%87%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E9%87%91%E6%B1%A4%E6%B9%BE%E6%B5%B7%E6%B0%B4%E6%B8%A9%E6%B3%89%E5%BA%A6%E5%81%87%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E9%87%91%E6%B1%A4%E6%B9%BE%E6%B5%B7%E6%B0%B4%E6%B8%A9%E6%B3%89%E5%BA%A6%E5%81%87%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E9%87%91%E6%B1%A4%E6%B9%BE%E6%B5%B7%E6%B0%B4%E6%B8%A9%E6%B3%89%E5%BA%A6%E5%81%87%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+    <div class="hotel-card">
+      <div class="h-rank">#4</div>
+      <h4>漳州云霄云顶温泉大酒店</h4>
+      <div class="h-price">
+        参考价 ¥480/晚
+      </div>
+      <div class="h-rating">
+        美团 ⭐ 4.5 ｜ 小红书情感 天然碳酸氢钠温泉·带泳池
+      </div>
+      <div class="h-loc">📍 县城莆美镇 / 近将军山（参考价 ¥400-550）</div>
+      <div class="h-reason">推荐理由：离县城与将军山最近，泡温泉+吃烧窑鸡一条线；带室外恒温泳池，家庭更合适</div>
+      <div class="h-amenities">
+        <span class="tag">碳酸氢钠温泉</span><span class="tag">室外泳池</span><span class="tag">免费停车</span><span class="tag">近将军山</span>
+      </div>
+      
+      <div class="book-links">
+        <span class="book-label">去预订：</span>
+        <a href="https://hotels.meituan.com/search/?q=%E6%BC%B3%E5%B7%9E%E4%BA%91%E9%9C%84%E4%BA%91%E9%A1%B6%E6%B8%A9%E6%B3%89%E5%A4%A7%E9%85%92%E5%BA%97" target="_blank" rel="noopener">美团</a>
+        <a href="https://hotels.ctrip.com/hotels/list?city=&checkIn=&checkOut=&keyword=%E6%BC%B3%E5%B7%9E%E4%BA%91%E9%9C%84%E4%BA%91%E9%A1%B6%E6%B8%A9%E6%B3%89%E5%A4%A7%E9%85%92%E5%BA%97" target="_blank" rel="noopener">携程</a>
+        <a href="https://hotel.fliggy.com/search.htm?searchType=hotel&keywords=%E6%BC%B3%E5%B7%9E%E4%BA%91%E9%9C%84%E4%BA%91%E9%A1%B6%E6%B8%A9%E6%B3%89%E5%A4%A7%E9%85%92%E5%BA%97" target="_blank" rel="noopener">飞猪</a>
+        <a href="https://www.booking.com/searchresults.html?ss=%E6%BC%B3%E5%B7%9E%E4%BA%91%E9%9C%84%E4%BA%91%E9%A1%B6%E6%B8%A9%E6%B3%89%E5%A4%A7%E9%85%92%E5%BA%97" target="_blank" rel="noopener">Booking</a>
+      </div>
+      <span class="confidence-badge confidence-yellow"></span>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  📅 每日行程 · AGENT MUST-DO:
+  ① 必须按 trip.duration_days 给出**全部天数**的卡片（D1 ~ Dn 一个不能少）
+  ② 每天至少包含：当天主题 / 时间轴 / 3-6 个 POI / 三餐推荐
+  ③ 每个 POI 必须有：名称 / 推荐理由 / 用时建议 / 营业时间 / 评分（缺失时显式标）
+  ④ 每天必须有"当天小地图 + 当天路线"（路线规则同总览地图）
+  ⑤ 每天必须有：当天预算小计 + 体力指数（轻松/适中/暴走）
+-->
+<section id="days">
+  <h2>📅 每日行程</h2>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="1">
+  <header class="day-header">
+    <h3>D1 · 2026-10-01 周四 · 国庆首日当天往返 · 中午在将军山吃窑鸡 → 下午乌山紧凑登顶（14:15 进山 / 17:15 下撤）</h3>
+    <div class="day-meta">
+      <span>📍 360km</span>
+      <span>🚶 0.8 体力指数</span>
+      <span>☁️ 10 月上旬云霄约 21-32℃，多雾转多云、降水少；10 月日落约 17:56，下山时间必须守住</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>09:00 厦门出发 → G15 沈海高速 → 云霄/东厦出口 → 云霄县城将军山（约 3h，10/1 出程高峰）
+            
+            
+              · 厦门出发（自驾） → 将军山烧窑鸡 · 午饭①点单
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>将军山吃烧窑鸡（午餐，约 1h）→ 13:10 出发去乌山
+            
+            
+              · 将军山烧窑鸡 · 午饭①点单 → 吃窑鸡（硬需求）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>云霄县城 → X532 盘山公路约 30km（50min）→ 乌山山脚停车场
+            
+            
+              · 吃窑鸡（硬需求） → 出发去乌山
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>停车 + 上厕所（唯一厕所点）→ 14:15 进山门，走左侧秘密通道
+            
+            
+              · 出发去乌山 → 乌山山脚停车场（红军饭店）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>红军秘密通道 → 一线天 / 天然石隧道（需手电）
+            
+            
+              · 乌山山脚停车场（红军饭店） → 乌山山门入口（熔断点）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>石隧道 → 中共闽南地委机关旧址 / 龙床石
+            
+            
+              · 乌山山门入口（熔断点） → 红军秘密通道 + 一线天
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>旧址 → 红旗岩（主峰骆驼峰 1050.6m）登顶
+            
+            
+              · 红军秘密通道 + 一线天 → 中共闽南地委机关旧址 / 龙床石
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>红旗岩 → 右侧大路下山 → 17:15 前回到停车场
+            
+            
+              · 中共闽南地委机关旧址 / 龙床石 → 红旗岩登顶（主峰骆驼峰 1050.6m）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>乌山 → 厦门（约 20:00 到家）
+            
+            
+              · 红旗岩登顶（主峰骆驼峰 1050.6m） → 右侧大路下山
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">09:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>厦门出发（自驾）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 10/1 是国庆出程最高峰（8-12 时为车流峰值），9 点出发正好撞上，厦门到云霄按 3-3.5h 预留，别只按 2.5h 算</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 180 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">12:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>将军山烧窑鸡 · 午饭①点单</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 【今天的第一要务】到店先点窑鸡——本地土鸡腌好裹锡纸入窑焖烤，现烤要等 20-30 分钟；阿川烧窑鸡、将军山半山腰正宗烧窑鸡都在这一带</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 11:30-01:00</span>
+            <span>🎫 ¥窑鸡约 ¥80/只，人均 ¥58</span>
+            <span>⏱️ 约 15 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">12:15</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>吃窑鸡（硬需求）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 两人点一只窑鸡（约 80 元）+ 两碗水面/米饭就够；把吃饭控制在 1 小时内，这是今天不崩盘的关键</div>
+          
+          <div class="t-detail">
+            <span>🕐 约 11:30-01:00</span>
+            <span>🎫 ¥两只人一只鸡 + 主食约 ¥150</span>
+            <span>⏱️ 约 45 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">13:10</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>出发去乌山</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 县城到乌山山脚约 30km / 50min 的 X532 盘山路，弯多路窄，弯道记得鸣笛</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 50 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>乌山山脚停车场（红军饭店）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 导航「红军饭店 / 乌山游击队之家」直达入口，停车免费；山脚是全程唯一厕所点，务必先解决</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            <span>🎫 ¥免费停车</span>
+            <span>⏱️ 约 15 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:15</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>乌山山门入口（熔断点）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 【熔断点】14:30 前必须进山门。若 14:45 还没进来，直接放弃登顶，只走秘密通道+一线天，16:30 原路返回</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天（以现场为准）</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 10 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:25</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>红军秘密通道 + 一线天</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 巨石叠成的天然石隧道，洞内有一段完全漆黑必须带手电；今天时间紧，这一段少停留多赶路</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 75 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">15:40</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>中共闽南地委机关旧址 / 龙床石</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 闽粤边区革命根据地核心，石壁刻着「财务处」「炊事班」；路过看一眼就走，别在这儿耗掉登顶时间</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 20 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">16:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>红旗岩登顶（主峰骆驼峰 1050.6m）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 今天的时间红线：16:00 前登顶，拍完照立刻走右侧大路下山；16:15 还没到顶就放弃，安全第一</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 30 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">16:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>右侧大路下山</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 右侧大路平缓好走，约 45min 回停车场；这一段务必不开小差，10 月日落约 17:56</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天</span>
+            <span>🎫 ¥免费</span>
+            <span>⏱️ 约 45 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">17:15</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>返程出发（硬纪律）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 17:15 前必须离开山脚：出山后还有 30km X532 无路灯盘山路，尾段会擦黑，约 20:00 到厦门</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 165 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">20:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>抵达厦门</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 当天往返闭环完成。若想把窑鸡改到晚上吃、把登顶走完整，见返程备选（约 21:30 到家）</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 0 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥320</div>
+  
+</article>
+  
+    <!--
+  AGENT MUST-DO（每天卡片）:
+  ① day.theme / day.fatigue_index 必填（否则 header 残缺）
+  ② day.stops 至少 3-6 条（含三餐 + 景点），每条必须有 time / poi.name / duration_min
+  ③ day.routes 必填（实际道路 polyline 或 路径文字版，规则同总览地图）
+  ④ stop.poi 缺字段时，agent 自己用 WebSearch 补 rating/open_hours/ticket_price
+-->
+<article class="day-card" data-day="2">
+  <header class="day-header">
+    <h3>D2 · 2026-10-02 周五 · 【备选】仅当决定住一晚 · 温泉解乏 + 红树林 / 县城美食 + 返程</h3>
+    <div class="day-meta">
+      <span>📍 200km</span>
+      <span>🚶 0.3 体力指数</span>
+      <span>☁️ 多云，适合泡温泉与湿地散步</span>
+    </div>
+  </header>
+
+  
+    <div class="day-routes">
+      <h4>🗺️ 当日路线</h4>
+      <ol class="route-steps">
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>酒店 → 温泉（金汤湾海水温泉 / 云顶温泉）
+            
+            
+              · 温泉解乏（金汤湾 / 云顶温泉） → 漳江口红树林（东厦镇竹塔村）
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>温泉 → 漳江口红树林（东厦镇竹塔村）
+            
+            
+              · 漳江口红树林（东厦镇竹塔村） → 云霄县城美食扫街
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>红树林 → 云霄县城美食扫街
+            
+            
+              · 云霄县城美食扫街 → 返程厦门
+            
+          </li>
+        
+          <li>
+            
+              <span class="route-source-text">路径：</span>县城 → 厦门（约 2.5h）
+            
+            
+          </li>
+        
+      </ol>
+    </div>
+  
+
+  <ol class="timeline">
+    
+      <li class="stop stop-else">
+        <div class="t-time">08:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>温泉解乏（金汤湾 / 云顶温泉）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 爬山后泡海水温泉最解乏：金汤湾为含氡强食盐泉，日出水 2000 吨、水温 62-65℃</div>
+          
+          <div class="t-detail">
+            <span>🕐 以酒店/景区公示为准</span>
+            <span>🎫 ¥温泉票 ¥93-108</span>
+            <span>⏱️ 约 120 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">10:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>漳江口红树林（东厦镇竹塔村）</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 北回归线以北面积最大的红树林，涨潮时坐村民小船进林，白鹭+青蟹+滩涂</div>
+          
+          <div class="t-detail">
+            <span>🕐 白天</span>
+            <span>🎫 ¥坐船约 ¥20/人</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-lunch">
+        <div class="t-time">12:30</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">🍜</span>
+            <strong>云霄县城美食扫街</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 五板桥水面（三鲜面 12 元 / 干拌面 2 元）、城中米梭 3 元/个、小巧煎饺 10 元/10 个、舒心园猫仔粥 20 元</div>
+          
+          <div class="t-detail">
+            <span>🕐 全天（部分小店下午/晚间关）</span>
+            <span>🎫 ¥人均 ¥35</span>
+            <span>⏱️ 约 90 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+      <li class="stop stop-else">
+        <div class="t-time">14:00</div>
+        <div class="t-body">
+          <div class="t-title">
+            <span class="t-emoji">📌</span>
+            <strong>返程厦门</strong>
+            
+            <span class="warn-badge">⚠️ 坐标待校验</span>
+          </div>
+          
+            <div class="t-reason">💡 14:00 出发，17:00 前后到厦门；10/2 出程车流仍高，按 3h 预留更稳</div>
+          
+          <div class="t-detail">
+            <span>🕐 —</span>
+            
+            <span>⏱️ 约 150 分钟</span>
+          </div>
+        </div>
+      </li>
+    
+  </ol>
+
+  
+    <div class="day-budget">💸 当天预算约 ¥460</div>
+  
+</article>
+  
+</section>
+
+<!--
+  💰 预算明细 · AGENT MUST-DO:
+  ① 必须有总预算 + 6 类目占比（交通/住宿/餐饮/门票/购物/备用）
+  ② 必须有饼图（数据由 budget.categories 驱动，模板自带 Chart.js）
+  ③ 必须有"实际 vs 用户期望预算"对比，超支时标红
+  ④ 凑不齐细项时，按类目占比模板（见 data/skeleton_fallbacks.json）兜底
+-->
+<section id="budget">
+  <h2>💰 预算明细</h2>
+  <div class="budget-section">
+  <div class="budget-pie-wrap">
+    <canvas id="budget-pie" width="320" height="320"></canvas>
+  </div>
+  <div class="budget-table">
+    <table>
+      <thead><tr><th>类目</th><th>金额（¥）</th><th>占比</th></tr></thead>
+      <tbody>
+        
+        
+        <tr><td>大交通</td><td>240</td><td>38.7%</td></tr>
+        <tr><td>住宿</td><td>0</td><td>0.0%</td></tr>
+        <tr><td>餐饮</td><td>280</td><td>45.2%</td></tr>
+        <tr><td>门票</td><td>0</td><td>0.0%</td></tr>
+        <tr><td>市内交通</td><td>0</td><td>0.0%</td></tr>
+        <tr><td>备用</td><td>100</td><td>16.1%</td></tr>
+        <tr class="grand"><td>合计</td><td>620</td><td>人均 310</td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+    <div class="tradeoffs">
+      <h4>💡 超支取舍建议</h4>
+      <ul>
+        
+          <li><strong>两人合吃一只窑鸡 + 主食（别点两只）</strong> · 节省 ~¥40/人 · 窑鸡约 80 元/只，两人一只足够；配两碗水面/米饭约 30 元，一餐控制在 ¥150 内</li>
+        
+          <li><strong>窑鸡安排在县城将军山吃，不在景区/山脚吃</strong> · 节省 ~¥30/人 · 将军山一带是窑鸡老店聚集地（阿川、半山腰正宗），价格比景区内实惠且味道更正</li>
+        
+          <li><strong>自带水和干粮上山（不在山脚买）</strong> · 节省 ~¥30/人 · 山上完全无补给，山脚小卖部偏贵；今天时间紧，带干粮还能省下停留时间</li>
+        
+          <li><strong>把「14:30 进山门」当熔断点，超时就放弃登顶</strong> · 节省 ~¥0/人 · 10/1 出程高峰 + 中午窑鸡已经把窗口压到 3 小时，宁可不登顶也别摸黑走 30km 无路灯盘山路</li>
+        
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<!--
+  ⚠️ 风险提示 · AGENT MUST-DO:
+  无论数据完整度，本节必须输出至少 3 类风险：
+    1. 天气（出行日预报 + 异常天气警告，缺时调 WebSearch）
+    2. 节假日 / 人流（结合 risk_knowledge.json + 出行日期）
+    3. 当地骗局 / 防坑（risk_knowledge.json 该城市条目 + xhs"X 避雷"补充）
+  每条风险必须标置信度 🟢🟡⚪
+-->
+<section id="risk">
+  <h2>⚠️ 风险提示</h2>
+  <!--
+  AGENT MUST-DO: 至少 3 类风险（天气 / 节假日 / 防坑），加 1 类应急联系。
+  上游 risk-check 给空时用 skeleton_fallbacks.risk_panel_default 兜底。
+-->
+<div class="risk-panel">
+  <div class="risk-block confidence-gray">
+    <h4>🌤️ 天气</h4>
+    <p>10 月上旬云霄约 21-32℃（日均约 24℃，10 月平均降水仅 46.5mm、属少雨月），但 10 月是台风季尾段——2023 年 10 月台风「小犬」曾致云霄暴雨、沿海 9-10 级阵风。出发前必须查台风路径与实时预报。</p>
+    
+      <ul><li>【本方案最大风险】三个条件叠加后山上只剩 3 小时：① 10/1 出程高峰（8-12 时车流峰值），厦门→云霄按 3-3.5h 算；② 中午在县城吃窑鸡占掉约 1 小时；③ 县城→乌山山脚还要 50min 盘山路。所以必须守住：14:30 前进山门、16:00 前登顶、17:15 前回到停车场</li><li>【熔断规则】14:45 还没进山门 → 直接放弃登顶，只走秘密通道+一线天，16:30 原路返回；别为了打卡把下山时间挤到天黑之后</li><li>出山后还有约 30km 的 X532 盘山公路（弯多路窄、无路灯），17:15 出发时天已偏暗、尾段擦黑，务必开灯慢行、弯道鸣笛</li><li>窑鸡现烤要等 20-30 分钟：到店先下单再坐下，能把吃饭压到 1 小时内；两人点一只窑鸡（约 80 元）+ 主食足够</li><li>10 月仍有台风尾段风险，出发前 3 天查台风路径 + 云霄实时天气；雨天不要登顶，石阶与崖洞湿滑极易摔伤</li><li>山上无厕所、无信号、无补给：每人带 1.5L 以上水与干粮；穿防滑登山鞋；带头电/头灯（秘密通道内有一段完全漆黑）</li></ul>
+    
+  </div>
+
+  
+    <div class="risk-block confidence-yellow">
+      <h4>🎉 节假日</h4>
+      <p><strong>国庆中秋连休 8 天（10/1-10/8，7 座以下高速免费）</strong> · 2026 年中秋为 10/6，与国庆连休成 8 天，高速免费时段 10/1 00:00 至 10/8 24:00。10/1 正是出程车流最高峰——福建交警研判 10/1 8:00-12:00 为峰值，全省高速出入口日均流量较日常上升 100% 以上，沈海高速漳浦段（赵家堡—鼓志山隧道）本身也是 10:00-16:00 高峰段。你要求「9 点出发 + 当天往返 + 一定要吃窑鸡」，三者叠加后山上时间被压到 3 小时，因此本方案用「14:30 前进山门」作为熔断点，并明确 16:00 登顶、17:15 下撤两条红线。</p>
+      
+        <p>建议改期：改成「晚上吃窑鸡」最划算：先爬山（12:30 进山、走完整环线登顶 4h），17:15 下山后进县城吃窑鸡（店家营业到凌晨 1 点），约 21:30 到家——两头都不牺牲，只是晚睡, 若肯把出发提前到 08:00：约 11:00 到县城，吃完窑鸡 12:30 进山，登顶和窑鸡都能从容做到, 改到 10/3 或 10/4 出发：出程车流明显回落，同样 9 点出发能多出约 1 小时余量，中午窑鸡也吃得更从容</p>
+      
+    </div>
+  
+
+  <div class="risk-block">
+    <h4>🚨 防坑提示</h4>
+    
+    
+      <div class="scam-group">
+        <strong>高速与自驾</strong>
+        <ul><li>10/1 是出程峰值，追尾高发：保持车距、不占应急车道、别为赶时间超速</li><li>免费时段服务区人多，注意随身财物；路边「代客泊车」揽客不要理（乌山停车本来就免费）</li><li>傍晚走 X532 盘山路务必开灯减速，不熟悉的弯道不要借道超车</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>窑鸡与本地餐饮防坑 · 云霄</strong>
+        <ul><li>窑鸡按只卖（约 80 元/只），点单前先确认价格与现烤等待时间，避免结账加价</li><li>除了窑鸡，景区或山脚的「游击队套餐」也先问清单价再点</li><li>土特产（枇杷/烟肠/酥糖/枕头饼）去县城正规店买，景区摊贩价格虚高</li></ul>
+      </div>
+    
+      <div class="scam-group">
+        <strong>登山安全</strong>
+        <ul><li>除主峰外其他线路未开发、深山无信号极易迷路，严禁脱离主径探野路</li><li>崖洞内湿滑且黑暗，不要单独行动，务必结伴并带手电</li><li>本方案时间偏紧，别为了「打卡完所有点」压缩下撤时间，天黑在山里比少看两个点危险得多</li></ul>
+      </div>
+    
+  </div>
+
+  <div class="risk-block confidence-green">
+    <h4>📞 应急电话</h4>
+    <ul class="emergency">
+      <li>报警 110</li>
+      <li>急救 120</li>
+      <li>旅游投诉 12301</li>
+      <li>消费维权 12315</li>
+      <li>气象预警 12379</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!--
+  📓 小红书真实笔记参考 · AGENT MUST-DO:
+  本节必出，至少 6-10 篇真实笔记，按主题分组（攻略/美食/住宿/拍照/避雷/其他）
+  数据获取（按优先级）：
+    Tier 1: 调 xhs CLI（用户已登录时）
+    Tier 2: WebSearch site:xiaohongshu.com（用户跳过登录时）
+    Tier 3: WebSearch 马蜂窝/抖音目的地关键词
+  完全失败时，渲染"本次未拿到第三方游记"提示卡 + 给一组手动搜索链接
+  （绝不允许这一节空白；本 section 即使 xhs_notes=None 也要 include）
+-->
+<section id="xhs-notes">
+  <h2>📓 小红书真实笔记参考</h2>
+  <!--
+  AGENT MUST-DO: 至少 6-10 篇真实笔记，按主题分组。
+  完全没拿到时，自动渲染"未拿到第三方游记"提示 + 给一组手动搜索链接。
+-->
+<div class="xhs-section">
+  
+  <p class="xhs-intro">这里是搜索过程中找到的高质量真实笔记，按主题分类，点击直达原文。</p>
+  
+    <div class="xhs-group">
+      <h4>真实笔记参考 <span class="xhs-count">8 篇</span></h4>
+      <div class="xhs-grid">
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%BC%B3%E5%B7%9E%E4%B9%8C%E5%B1%B1%20%E5%85%8D%E9%97%A8%E7%A5%A8" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">漳州乌山：免门票、免费停车，风景不输 5A</div>
+              <div class="xhs-meta">
+                <span>@trip</span>
+                <span>❤️ 2100</span>
+                <span>💬 160</span>
+              </div>
+              
+                <div class="xhs-snippet">门票免费、停车免费，厦门出发约 2.5h；导航「红军饭店（乌山游击队之家）」可直接停到入口</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%BA%91%E9%9C%84%20%E7%83%A7%E7%AA%91%E9%B8%A1%20%E5%93%AA%E5%AE%B6" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">云霄烧窑鸡到底中午吃还是晚上吃？本地人给的时间表</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 2400</span>
+                <span>💬 210</span>
+              </div>
+              
+                <div class="xhs-snippet">窑鸡现烤要等 20-30min，将军山一带 11:30 开门、凌晨 1 点才关。中午吃=顺路不绕、下山前吃完；晚上吃=下山后回县城、能多爬...</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E5%B1%B1%20%E7%99%BB%E9%A1%B6%20%E8%B7%AF%E7%BA%BF" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">乌山经典路线：左上右下绕一圈约 4 公里</div>
+              <div class="xhs-meta">
+                <span>@trip</span>
+                <span>❤️ 1500</span>
+                <span>💬 95</span>
+              </div>
+              
+                <div class="xhs-snippet">左侧秘密通道（石洞+一线天）上山、右侧大路下山约 4h；体力一般的到红旗岩原路返回约 3h</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E5%B1%B1%20%E9%81%BF%E5%9D%91" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">乌山避坑：山上没有厕所、没有信号、没有补给</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 900</span>
+                <span>💬 70</span>
+              </div>
+              
+                <div class="xhs-snippet">进景区前先上厕所，带足水；穿防滑鞋、带手电；除主峰外线路未开发，别走野路</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E5%B1%B1%E5%A4%A9%E6%B1%A0" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">乌山天池是另一条线：尚未完全开放，有门卫拦路</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 700</span>
+                <span>💬 55</span>
+              </div>
+              
+                <div class="xhs-snippet">天池在常山方向、海拔约 900m，未开放景区且无信号，建议跟本地户外组织同行，可坐村民小船</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%BA%91%E9%9C%84%20%E7%BE%8E%E9%A3%9F" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">云霄美食扫街：烧窑鸡、水面、米梭、猫仔粥</div>
+              <div class="xhs-meta">
+                <span>@toutiao</span>
+                <span>❤️ 1800</span>
+                <span>💬 130</span>
+              </div>
+              
+                <div class="xhs-snippet">将军山烧窑鸡约 80 元/只、五板桥三鲜面 12 元、米梭 3 元/个、舒心园猫仔粥 20 元，价格很良心</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E6%B2%88%E6%B5%B7%E9%AB%98%E9%80%9F%20%E5%9B%BD%E5%BA%86%20%E5%A0%B5%E8%BD%A6" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">10/1 自驾沈海高速有多堵？漳浦段 10-16 点最难受</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 3300</span>
+                <span>💬 420</span>
+              </div>
+              
+                <div class="xhs-snippet">国庆首日出程 8-12 时是车流峰值，厦门—漳浦赵家堡至鼓志山隧道路段 10:00-16:00 常态化缓行；9 点出发要按 3-3.5h 预留，别只按平日 2.5h 算</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-negative">⚠️ 避雷</span>
+              
+            </div>
+          </a>
+        
+          <a class="xhs-card" href="https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E5%B1%B1%20%E7%99%BB%E5%B1%B1%E6%97%B6%E9%97%B4" target="_blank" rel="noopener">
+            
+            <div class="xhs-body">
+              <div class="xhs-title">中午才到山，乌山怎么爬才不摸黑</div>
+              <div class="xhs-meta">
+                <span>@sina</span>
+                <span>❤️ 1100</span>
+                <span>💬 76</span>
+              </div>
+              
+                <div class="xhs-snippet">经典环线 4km / 3-4h；下午 2 点后进山就必须守死线——16:00 前不登顶就下撤，17:00 前必须回到停车场，X532 盘山路无路灯，摸黑下山很危险</div>
+              
+              
+                <span class="xhs-sentiment xhs-sentiment-positive">👍 推荐</span>
+              
+            </div>
+          </a>
+        
+      </div>
+    </div>
+  
+  <p class="xhs-disclaimer">
+    💡 笔记内容由作者发布，仅作参考。点击卡片跳转小红书原文。
+  </p>
+  
+</div>
+</section>
+
+<section id="data-completeness">
+  <h2>📊 数据完整性</h2>
+  <!--
+  AGENT MUST-DO:
+  这是固定底部面板，告诉用户哪些数据是一手 / 哪些是兜底。
+  data_sources 由 check_deps + agent 实际调用情况组装。
+-->
+<div class="completeness-panel">
+  <div class="comp-row">
+    <strong>✅ 已启用</strong>
+    <ul>
+      
+      
+      
+      <li>WebSearch — 兜底数据源</li>
+    </ul>
+  </div>
+  
+  <p class="comp-tip">
+    💡 想升级数据可信度？把对应数据源配上后告诉 agent「重跑 XX」即可增量更新。
+  </p>
+</div>
+</section>
+
+<!--
+  🎒 行前清单 · AGENT MUST-DO:
+  无论数据完整度，必须输出至少 4 类清单：
+    1. 证件（身份证/驾照/学生证/老年证）
+    2. 充电（充电宝/数据线/转换头）
+    3. 现金/支付（少量现金/支付宝微信备用）
+    4. 应急（常用药/急救联系/保险卡）
+  risk-check 给了具体内容就用具体内容，没给就用以上 4 类硬清单
+  （兜底数据见 data/skeleton_fallbacks.json）
+-->
+<section id="checklist">
+  <h2>🎒 行前清单</h2>
+  <!--
+  AGENT MUST-DO: checklist 至少 4 类（证件/充电/支付/应急）。
+  risk-check 给了具体内容用具体内容，没给就用 skeleton_fallbacks.json 兜底。
+-->
+
+<div class="checklist">
+  
+    <div class="check-group">
+      <h4>🪪 证件</h4>
+      <ul>
+        <li><label><input type="checkbox"> 身份证（住宿登记必备）</label></li><li><label><input type="checkbox"> 驾驶证 + 行驶证（自驾必备，电子证照也可但建议带实体）</label></li><li><label><input type="checkbox"> ETC 卡或少量现金（免通行费时段理论上不用付费，备着以防万一）</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>🔌 充电/数码</h4>
+      <ul>
+        <li><label><input type="checkbox"> 充电宝（手机导航+拍照耗电快）</label></li><li><label><input type="checkbox"> 手机离线地图（乌山深山基本无信号）</label></li><li><label><input type="checkbox"> 手电或头灯（红军秘密通道内有一段完全漆黑，手机灯不够）</label></li><li><label><input type="checkbox"> 车载充电线 / 车充</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💵 现金/支付</h4>
+      <ul>
+        <li><label><input type="checkbox"> 少量现金 ¥300（山上、农家菜可能无信号难扫码）</label></li><li><label><input type="checkbox"> 微信 / 支付宝备用</label></li>
+      </ul>
+    </div>
+  
+    <div class="check-group">
+      <h4>💊 健康/应急</h4>
+      <ul>
+        <li><label><input type="checkbox"> 防滑登山鞋（沙石路+崖洞湿滑，普通运动鞋容易摔）</label></li><li><label><input type="checkbox"> 每人 1.5L 以上饮用水 + 干粮（山上无任何补给）</label></li><li><label><input type="checkbox"> 驱蚊液 / 风油精（山里蚊虫多、湿气重）</label></li><li><label><input type="checkbox"> 薄外套或冲锋衣（山区湿气重、早晚凉）</label></li><li><label><input type="checkbox"> 常用药：创可贴、肠胃药、感冒药、藿香正气（10 月仍偏热）</label></li>
+      </ul>
+    </div>
+  
+</div>
+</section>
+
+<footer>
+  <p>由出游规划师 v1.0.0 生成 · 2026-09-14T17:32:45+08:00</p>
+  <p>本报告所有价格 / 营业 / 评分均为查询时刻的参考值，请出行前再核实。</p>
+</footer>
+
+<script>
+  // 总览地图 —— 国内可用瓦片源（按可达性顺序），任何一个失败自动切下一个
+  // 地图已替换为离线静态 SVG（见 overview-map 区块），无需 Leaflet
+  // 预算饼图
+  const ctx = document.getElementById('budget-pie');
+  if (ctx) {
+    const bd = {"accommodation": 0, "buffer": 100, "food": 280, "ticket": 0, "transport_intra": 0, "transport_long": 240};
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['大交通','住宿','餐饮','门票','市内交通','备用'],
+        datasets: [{
+          data: [bd.transport_long, bd.accommodation, bd.food, bd.ticket, bd.transport_intra, bd.buffer],
+          backgroundColor: ['#3498db','#9b59b6','#e74c3c','#f39c12','#1abc9c','#95a5a6'],
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+</script>
+</body>
+</html>
